@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Intelligent Spell Checker</title>
+<meta name="description" content="A quiet, precise spell checker — built with data structures, made to feel effortless." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fragment+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fdfcfb;
+    --surface:#ffffff;
+    --ink:#1a1d23;
+    --muted:#8b8f98;
+    --faint:#b8bcc4;
+    --line:#ede9e3;
+    --line-soft:#f3f0eb;
+    --accent:#111827;
+    --accent-hover:#000000;
+    --accent-soft:#f3f3f2;
+    --paper:#fbf9f6;
+    --red:#c5533a;
+    --red-soft:#fef6f3;
+    --red-line:#f5d6cf;
+    --green:#2a7a5b;
+    --green-soft:#f0faf6;
+    --green-line:#cfe8de;
+    --radius:22px;
+    --radius-sm:16px;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-slow: cubic-bezier(0.25, 1, 0.5, 1);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:"Plus Jakarta Sans",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  ::selection{background:#111827;color:#fff}
+  /* subtle paper texture */
+  body::before{
+    content:"";
+    position:fixed;inset:0;pointer-events:none;opacity:.35;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #fff 0%, transparent 60%),
+      radial-gradient(900px 500px at 90% 30%, #fef3e8 0%, transparent 55%),
+      radial-gradient(800px 400px at 10% 80%, #eef2ff 0%, transparent 50%);
+    z-index:-1;
+  }
+  /* header */
+  .header{max-width:780px;margin:0 auto;padding:42px 24px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .brand{display:flex;align-items:center;gap:14px}
+  .mark{width:32px;height:32px;border-radius:9px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:15px;font-weight:700;letter-spacing:-0.02em;box-shadow:0 6px 20px rgba(17,24,39,.12);transition:transform .6s var(--ease)}
+  .brand:hover .mark{transform:rotate(8deg) scale(1.03)}
+  .brand h1{font-size:18px;font-weight:700;letter-spacing:-0.04em;margin:0;line-height:1;color:var(--ink)}
+  .brand p{margin:3px 0 0;font-size:13px;color:var(--muted);font-weight:400;letter-spacing:-0.01em}
+  .meta{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);border:1px solid var(--line);background:rgba(255,255,255,.7);backdrop-filter:blur(8px);padding:7px 12px;border-radius:999px;white-space:nowrap}
+  @media(max-width:640px){.header{padding:28px 18px 18px}.brand p{display:none}.meta{font-size:10px;padding:6px 10px}}
+  /* layout */
+  .wrap{max-width:780px;margin:0 auto;padding:0 24px 56px}
+  @media(max-width:640px){.wrap{padding:0 16px 40px}}
+  /* card */
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 1px 2px rgba(17,24,39,.04), 0 8px 32px rgba(17,24,39,.06);transition:border-color .5s var(--ease), box-shadow .5s var(--ease), transform .5s var(--ease)}
+  .card:hover{border-color:#e7e0d6;box-shadow:0 2px 8px rgba(17,24,39,.06), 0 16px 40px rgba(17,24,39,.08)}
+  .card-pad{padding:28px}
+  @media(max-width:640px){.card-pad{padding:22px 18px}}
+  .eyebrow{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin:0 0 16px}
+  /* textarea */
+  .field{position:relative}
+  .textarea{width:100%;min-height:148px;resize:vertical;background:var(--paper);border:1.5px solid var(--line-soft);border-radius:18px;padding:18px 20px;font-size:16px;line-height:1.75;color:var(--ink);outline:none;font-family:"Plus Jakarta Sans",sans-serif;font-weight:400;transition:border-color .5s var(--ease), background .5s var(--ease), box-shadow .5s var(--ease);caret-color:var(--ink)}
+  .textarea::placeholder{color:#c1c5cc;font-weight:400}
+  .textarea:focus{background:#fff;border-color:#d8d0c2;box-shadow:0 0 0 5px rgba(237,233,227,.6)}
+  .textarea:focus::placeholder{color:#d0d4da}
+  /* controls row */
+  .controls{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;flex-wrap:wrap}
+  .ctrls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .pill{display:inline-flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--line-soft);border-radius:999px;padding:7px 12px;transition:border-color .4s var(--ease), background .4s var(--ease)}
+  .pill:hover{border-color:var(--line);background:#fff}
+  .pill label{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+  .pill select{border:none;background:transparent;font-family:"Plus Jakarta Sans",sans-serif;font-size:13px;font-weight:600;color:var(--ink);outline:none;cursor:pointer;padding-right:4px}
+  .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .btn{appearance:none;border:none;border-radius:999px;padding:12px 20px;font-family:"Plus Jakarta Sans",sans-serif;font-size:14px;font-weight:600;letter-spacing:-0.01em;cursor:pointer;display:inline-flex;align-items:center;gap:9px;justify-content:center;line-height:1;transition:all .5s var(--ease);will-change:transform}
+  .btn:active{transform:scale(.98)}
+  .btn-primary{background:var(--accent);color:#fff;box-shadow:0 4px 16px rgba(17,24,39,.14)}
+  .btn-primary:hover{background:var(--accent-hover);transform:translateY(-1px);box-shadow:0 8px 24px rgba(17,24,39,.18)}
+  .btn-ghost{background:transparent;color:var(--muted);border:1px solid transparent;padding:12px 14px}
+  .btn-ghost:hover{color:var(--ink);border-color:var(--line);background:rgba(255,255,255,.6)}
+  .btn-small{padding:9px 14px;font-size:13px;border-radius:999px}
+  .btn-primary.btn-small{box-shadow:0 2px 10px rgba(17,24,39,.12)}
+  .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .9s linear infinite;display:none}
+  .btn.loading .spinner{display:inline-block}
+  .btn.loading{pointer-events:none;opacity:.85}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .hint{font-size:12px;color:var(--faint);margin-top:14px;font-weight:400;letter-spacing:-0.01em}
+  .hint b{color:var(--muted);font-weight:600}
+  /* examples */
+  .examples{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+  .ex{font-size:13px;font-weight:500;color:var(--muted);background:transparent;border:1px dashed var(--line);padding:7px 13px;border-radius:999px;cursor:pointer;transition:all .5s var(--ease);font-family:"Plus Jakarta Sans",sans-serif}
+  .ex:hover{color:var(--ink);border-color:#d8d0c2;background:#fff;transform:translateY(-1px)}
+  .ex:active{transform:none}
+  /* stats — slow fade */
+  .stats{margin-top:22px;background:var(--paper);border:1px solid var(--line-soft);border-radius:14px;padding:12px 14px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--muted);line-height:1;opacity:0;transform:translateY(6px);animation:reveal .7s var(--ease-slow) forwards}
+  .stats b{color:var(--ink);font-weight:700;letter-spacing:-0.02em}
+  .stats .dot{width:3px;height:3px;border-radius:50%;background:var(--line);flex-shrink:0}
+  @keyframes reveal{to{opacity:1;transform:none}}
+  /* tokens */
+  .tokens{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;min-height:0}
+  .tokens:empty{margin:0}
+  .tok{padding:7px 12px;border-radius:999px;font-size:13.5px;font-weight:500;letter-spacing:-0.015em;border:1px solid transparent;line-height:1;display:inline-flex;align-items:center;transition:all .45s var(--ease);opacity:0;transform:translateY(4px);animation:reveal .6s var(--ease-slow) forwards}
+  .tok.correct{background:var(--green-soft);border-color:var(--green-line);color:var(--green)}
+  .tok.wrong{background:var(--red-soft);border-color:var(--red-line);color:var(--red);box-shadow:inset 0 -1.5px 0 rgba(197,83,58,.12);cursor:pointer}
+  .tok.wrong:hover{transform:translateY(-1px);box-shadow:inset 0 -1.5px 0 rgba(197,83,58,.12), 0 4px 12px rgba(197,83,58,.12);border-color:#e8b8ad}
+  .tok.neutral{background:var(--surface);border-color:var(--line);color:var(--muted)}
+  .legend{display:flex;gap:16px;align-items:center;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-top:14px;opacity:0;animation:reveal .7s var(--ease-slow) .15s forwards}
+  .legend i{width:8px;height:8px;border-radius:50%;display:inline-block;border:1px solid transparent}
+  .legend i.c{background:var(--green-soft);border-color:var(--green-line)}
+  .legend i.w{background:var(--red-soft);border-color:var(--red-line)}
+  .legend i.n{background:var(--surface);border-color:var(--line)}
+  /* detail */
+  .detail{margin-top:18px;display:grid;gap:12px}
+  .detail:empty{margin:0}
+  .issue{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px 18px;display:grid;gap:14px;opacity:0;transform:translateY(8px);animation:reveal .7s var(--ease-slow) forwards;transition:border-color .5s var(--ease), box-shadow .5s var(--ease)}
+  .issue:hover{border-color:#e7e0d6;box-shadow:0 8px 24px rgba(17,24,39,.06)}
+  .issue-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .issue-word{font-size:16px;font-weight:700;letter-spacing:-0.03em;color:var(--ink);display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .issue-word em{font-style:normal;font-weight:700;color:var(--red)}
+  .issue-word span{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);background:var(--paper);border:1px solid var(--line-soft);padding:4px 8px;border-radius:999px}
+  .issue-word span.is-fixed{background:var(--green-soft);border-color:var(--green-line);color:var(--green)}
+  .issue-meta{font-size:11px;color:var(--faint);font-family:"Fragment Mono",monospace;letter-spacing:-0.02em}
+  .sugs{display:flex;flex-wrap:wrap;gap:8px}
+  .sug{padding:8px 14px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:13.5px;font-weight:600;letter-spacing:-0.015em;color:var(--ink);cursor:pointer;transition:all .45s var(--ease);display:inline-flex;align-items:center;gap:6px;font-family:"Plus Jakarta Sans",sans-serif}
+  .sug:hover{border-color:var(--ink);background:var(--ink);color:#fff;transform:translateY(-1px)}
+  .sug.top{border-color:var(--ink);background:var(--ink);color:#fff;box-shadow:0 4px 14px rgba(17,24,39,.14)}
+  .sug.top:hover{background:#000;transform:translateY(-1px)}
+  .sug small{font-size:11px;font-weight:500;opacity:.55;font-family:"Fragment Mono",monospace;letter-spacing:-0.02em}
+  .sug.top small{opacity:.7;color:#fff}
+  .empty{padding:22px;text-align:center;color:var(--muted);font-size:13.5px;background:var(--paper);border:1px dashed var(--line);border-radius:16px;opacity:0;animation:reveal .7s var(--ease-slow) forwards}
+  /* corrected */
+  .corrected-wrap{margin-top:24px}
+  .corrected{white-space:pre-wrap;word-break:break-word;background:var(--paper);border:1px solid var(--line-soft);border-radius:18px;padding:18px 20px;font-size:15px;line-height:1.75;min-height:78px;color:var(--ink);transition:border-color .5s var(--ease), background .5s var(--ease)}
+  .corrected:focus-within,.corrected:hover{border-color:#e0d9cf;background:#fff}
+  .corrected:empty:before{content:"Corrected text will appear here…";color:var(--faint)}
+  .action-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+  /* footer */
+  .footer{max-width:780px;margin:0 auto;padding:28px 24px 40px;text-align:center;font-size:11px;color:var(--faint);letter-spacing:-0.01em}
+  .footer a{color:var(--muted);text-decoration:none;border-bottom:1px solid transparent;transition:all .4s var(--ease)}
+  .footer a:hover{color:var(--ink);border-color:var(--line)}
+  /* toast */
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(10px);background:var(--ink);color:#fff;padding:11px 16px;border-radius:999px;font-size:13px;font-weight:600;letter-spacing:-0.01em;opacity:0;pointer-events:none;transition:all .6s var(--ease);box-shadow:0 12px 32px rgba(17,24,39,.18)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  /* staggered reveals */
+  .reveal{opacity:0;transform:translateY(10px);animation:reveal .8s var(--ease-slow) forwards}
+  .reveal-1{animation-delay:.05s}.reveal-2{animation-delay:.12s}.reveal-3{animation-delay:.18s}
+</style>
+</head>
+<body>
+
+<header class="header reveal">
+  <div class="brand">
+    <div class="mark">✓</div>
+    <div>
+      <h1>Intelligent Spell Checker</h1>
+      <p>Precise. Quiet. Built on data structures.</p>
+    </div>
+  </div>
+  <div class="meta" id="dictBadge">Loading dictionary…</div>
+</header>
+
+<div class="wrap">
+  <div class="card card-pad reveal reveal-1">
+    <p class="eyebrow">Check text</p>
+    <div class="field">
+      <textarea id="input" class="textarea" placeholder="Type a word or a full sentence…&#10;Try: I recieve a beutiful oppurtunity tomorow"></textarea>
+    </div>
+
+    <div class="controls">
+      <div class="ctrls">
+        <div class="pill">
+          <label for="topN">Suggestions</label>
+          <select id="topN">
+            <option value="3">3</option>
+            <option value="5" selected>5</option>
+            <option value="8">8</option>
+          </select>
+        </div>
+        <div class="pill">
+          <label for="maxDist">Sensitivity</label>
+          <select id="maxDist">
+            <option value="1">Strict</option>
+            <option value="2" selected>Balanced</option>
+            <option value="3">Broad</option>
+          </select>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-ghost" onclick="clearAll()">Clear</button>
+        <button id="checkBtn" class="btn btn-primary" onclick="checkNow()">
+          <span class="spinner"></span><span class="btn-label">Check spelling</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="examples">
+      <button class="ex" onclick="fillExample(0)">“recieve beutiful”</button>
+      <button class="ex" onclick="fillExample(1)">“intelligant dictionery”</button>
+      <button class="ex" onclick="fillExample(2)">Full sentence demo</button>
+    </div>
+
+    <div id="stats" class="stats" style="display:none"></div>
+    <div id="tokens" class="tokens"></div>
+    <div class="legend" id="legend" style="display:none">
+      <span><i class="c"></i> Correct</span>
+      <span><i class="w"></i> Needs attention</span>
+      <span><i class="n"></i> Punctuation</span>
+    </div>
+    <div id="detail" class="detail"></div>
+  </div>
+
+  <div class="card card-pad reveal reveal-2 corrected-wrap">
+    <p class="eyebrow">Corrected text</p>
+    <div id="corrected" class="corrected"></div>
+    <div class="action-row">
+      <button class="btn btn-primary btn-small" onclick="applyAllTop()">Apply all top</button>
+      <button class="btn btn-ghost btn-small" onclick="copyCorrected()">Copy</button>
+      <button class="btn btn-ghost btn-small" onclick="downloadText()">Download .txt</button>
+    </div>
+    <p class="hint">Click any suggestion under a flagged word to apply it. “Apply all” uses the best suggestion for each word.</p>
+  </div>
+</div>
+
+<div class="footer reveal reveal-3">No external APIs · No database · Runs entirely on data structures</div>
+<div id="toast" class="toast">Copied to clipboard</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const input = $('input'), tokensEl = $('tokens'), detailEl = $('detail'),
+      correctedEl = $('corrected'), statsEl = $('stats'), legendEl = $('legend'),
+      dictBadge = $('dictBadge'), checkBtn = $('checkBtn');
+
+let lastResult = null;
+let applied = {};
+
+const examples = [
+  "I recieve a beutiful oppurtunity tomorow",
+  "intelligant dictionery algorithem",
+  "The goverment has seperate accomodation for the comittee. It is a neccessary mesure for their enviroment."
+];
+
+fetch('/api/health').then(r=>r.json()).then(j=>{
+  const n = (j.dictionary_size||36001).toLocaleString();
+  dictBadge.textContent = n + ' words';
+}).catch(()=> dictBadge.textContent='Dictionary ready');
+
+function fillExample(i){
+  input.value = examples[i];
+  applied = {};
+  checkNow();
+}
+function clearAll(){
+  input.value=''; applied={}; lastResult=null;
+  tokensEl.innerHTML=''; detailEl.innerHTML=''; correctedEl.textContent='';
+  statsEl.style.display='none'; legendEl.style.display='none';
+  input.focus();
+}
+
+input.addEventListener('keydown', e=>{
+  if((e.ctrlKey||e.metaKey) && e.key==='Enter'){ checkNow(); }
+});
+
+async function checkNow(){
+  const text = input.value;
+  if(!text.trim()){
+    showToast('Type something first');
+    input.focus(); return;
+  }
+  const top_n = parseInt($('topN').value,10);
+  const max_distance = parseInt($('maxDist').value,10);
+  checkBtn.classList.add('loading'); checkBtn.disabled=true;
+  try{
+    const res = await fetch('/api/check',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text, top_n, max_distance})
+    });
+    const data = await res.json();
+    lastResult = data;
+    const stillFlagged = new Set(data.tokens.filter(t=>!t.is_correct && t.is_word).map(t=>t.index));
+    for(const k of Object.keys(applied)){ if(!stillFlagged.has(parseInt(k,10))) delete applied[k]; }
+    render(data);
+  }catch(err){
+    showToast('Check failed — try again');
+  }finally{
+    checkBtn.classList.remove('loading'); checkBtn.disabled=false;
+  }
+}
+
+function render(data){
+  const s = data.stats;
+  statsEl.style.display='flex';
+  statsEl.style.animation='none'; statsEl.offsetHeight; statsEl.style.animation='';
+  statsEl.innerHTML = `
+    <span>Checked <b>${s.total_words}</b> words in <b>${s.total_time_ms}</b> ms</span><span class="dot"></span>
+    <span><b>${s.misspelled}</b> ${s.misspelled===1?'issue':'issues'} found</span><span class="dot"></span>
+    <span><b>${s.candidates_evaluated}</b> candidates</span>
+  `;
+
+  tokensEl.innerHTML='';
+  legendEl.style.display = data.tokens.length ? 'flex' : 'none';
+  data.tokens.forEach((t,i)=>{
+    const span = document.createElement('span');
+    span.className = 'tok ' + (t.is_word ? (t.is_correct ? 'correct':'wrong') : 'neutral');
+    span.textContent = t.raw;
+    span.style.animationDelay = (i*0.04)+'s';
+    if(t.is_word && !t.is_correct){
+      span.title = 'See suggestions below';
+      span.onclick = ()=> {
+        const card = document.getElementById('issue-'+t.index);
+        if(card) card.scrollIntoView({behavior:'smooth', block:'center'});
+      };
+    }
+    tokensEl.appendChild(span);
+  });
+
+  detailEl.innerHTML='';
+  const issues = data.tokens.filter(t=> !t.is_correct && t.is_word);
+  if(!issues.length){
+    detailEl.innerHTML = `<div class="empty">No issues found — looks good.</div>`;
+  } else {
+    issues.forEach((t, idx)=>{
+      const card = document.createElement('div');
+      card.className='issue'; card.id='issue-'+t.index;
+      card.style.animationDelay = (idx*0.07)+'s';
+      const isApplied = applied.hasOwnProperty(t.index);
+      const appliedWord = applied[t.index];
+      const head = document.createElement('div');
+      head.className='issue-head';
+      head.innerHTML = `
+        <div class="issue-word"><em>${escapeHtml(t.raw)}</em> <span class="${isApplied?'is-fixed':''}">${isApplied ? '→ ' + escapeHtml(appliedWord) : 'needs attention'}</span></div>
+        <div class="issue-meta">${t.candidate_count} candidates</div>
+      `;
+      card.appendChild(head);
+      const sugWrap = document.createElement('div');
+      sugWrap.className='sugs';
+      (t.suggestions||[]).forEach((sg, i)=>{
+        const btn = document.createElement('button');
+        const chosen = isApplied && appliedWord.toLowerCase()===sg.word.toLowerCase();
+        btn.className = 'sug' + (chosen ? ' top' : (i===0 && !isApplied ? ' top' : ''));
+        btn.innerHTML = `${escapeHtml(sg.word)} <small>#${i+1}</small>`;
+        btn.onclick = ()=> applySingle(t.index, sg.word);
+        sugWrap.appendChild(btn);
+      });
+      if(!(t.suggestions||[]).length){
+        const em = document.createElement('div');
+        em.className='hint'; em.textContent='No close match — try Broad sensitivity';
+        sugWrap.appendChild(em);
+      }
+      card.appendChild(sugWrap);
+      if(isApplied){
+        const undo = document.createElement('button');
+        undo.className='btn btn-ghost btn-small';
+        undo.textContent='Undo';
+        undo.style.marginTop='2px';
+        undo.onclick = ()=> { delete applied[t.index]; recomputeCorrected(); render(data); };
+        card.appendChild(undo);
+      }
+      detailEl.appendChild(card);
+    });
+  }
+  recomputeCorrected();
+}
+
+function applySingle(idx, word){
+  applied[idx]=word;
+  if(lastResult) render(lastResult);
+  showToast(`Applied “${word}”`);
+}
+
+function recomputeCorrected(){
+  if(!lastResult){ correctedEl.textContent=''; return; }
+  const text = lastResult.original_text;
+  fetch('/api/apply',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({text, selections: applied})
+  }).then(r=>r.json()).then(j=>{
+    if(Object.keys(applied).length===0){
+      correctedEl.textContent = lastResult.corrected_text || text;
+    } else {
+      correctedEl.textContent = j.corrected_text;
+    }
+  }).catch(()=>{
+    correctedEl.textContent = lastResult.corrected_text || text;
+  });
+}
+
+function applyAllTop(){
+  if(!lastResult){ showToast('Check a text first'); return; }
+  const issues = lastResult.tokens.filter(t=> !t.is_correct && t.is_word && (t.suggestions||[]).length);
+  if(!issues.length){ showToast('Nothing to apply'); return; }
+  issues.forEach(t=> { applied[t.index] = t.suggestions[0].word; });
+  render(lastResult);
+  showToast('Applied all top suggestions');
+}
+
+function copyCorrected(){
+  const txt = correctedEl.textContent.trim();
+  if(!txt){ showToast('Nothing to copy'); return; }
+  navigator.clipboard.writeText(txt).then(()=> showToast('Copied to clipboard')).catch(()=>{
+    const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); showToast('Copied');
+  });
+}
+function downloadText(){
+  const txt = correctedEl.textContent;
+  if(!txt.trim()){ showToast('Nothing to download'); return; }
+  const blob=new Blob([txt],{type:'text/plain'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='corrected.txt'; a.click(); URL.revokeObjectURL(url);
+  showToast('Downloaded corrected.txt');
+}
+function showToast(msg){
+  const t=$('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._hide); t._hide=setTimeout(()=> t.classList.remove('show'), 2000);
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g,m=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+input.focus();
+</script>
+</body>
+</html>
