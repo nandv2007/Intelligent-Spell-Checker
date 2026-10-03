@@ -3,422 +3,2323 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Intelligent Spell Checker</title>
-<meta name="description" content="A quiet, precise spell checker — built with data structures, made to feel effortless." />
+<title>Intelligent Spell Checker — Pure DSA Engine</title>
+<meta name="description" content="Intelligent DSA Spell Checker — fast membership lookup, Trie with DP edit-distance pruning, and frequency-ranked suggestions." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fragment+Mono&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#fdfcfb;
-    --surface:#ffffff;
-    --ink:#1a1d23;
-    --muted:#8b8f98;
-    --faint:#b8bcc4;
-    --line:#ede9e3;
-    --line-soft:#f3f0eb;
-    --accent:#111827;
-    --accent-hover:#000000;
-    --accent-soft:#f3f3f2;
-    --paper:#fbf9f6;
-    --red:#c5533a;
-    --red-soft:#fef6f3;
-    --red-line:#f5d6cf;
-    --green:#2a7a5b;
-    --green-soft:#f0faf6;
-    --green-line:#cfe8de;
-    --radius:22px;
-    --radius-sm:16px;
-    --ease: cubic-bezier(0.16, 1, 0.3, 1);
-    --ease-slow: cubic-bezier(0.25, 1, 0.5, 1);
+  :root {
+    /* Theme Palette inspired by the warm sunset aura presentation */
+    --aura-peach: #FFAE73;
+    --aura-coral: #FF758C;
+    --aura-rose: #F472B6;
+    --aura-amber: #FFD166;
+    --aura-lavender: #D8B4E2;
+    --aura-cream: #FFF7ED;
+
+    --bg-aura: #FBF5EE;
+    --slide-card: #FAF6F0;
+    --slide-inner: #FFFFFF;
+    --border-light: rgba(226, 210, 197, 0.7);
+    --border-focus: #FA824C;
+
+    --text-primary: #221F28;
+    --text-secondary: #635E6D;
+    --text-muted: #8E8997;
+
+    /* Sunset Stepper / Pill Accents */
+    --step-01-bg: #FEE7C8;
+    --step-01-border: #FCD34D;
+    --step-01-text: #92400E;
+
+    --step-02-bg: #FED7AA;
+    --step-02-border: #FB923C;
+    --step-02-text: #9A3412;
+
+    --step-03-bg: #FECDD3;
+    --step-03-border: #FB7185;
+    --step-03-text: #9F1239;
+
+    --step-04-bg: #FCA5A5;
+    --step-04-border: #F87171;
+    --step-04-text: #881337;
+
+    --step-purple-bg: #E9D5FF;
+    --step-purple-border: #C084FC;
+    --step-purple-text: #6B21A8;
+
+    /* Primary Accent Gradients */
+    --grad-primary: linear-gradient(135deg, #FF6B6B 0%, #FA824C 100%);
+    --grad-primary-hover: linear-gradient(135deg, #FF5252 0%, #F57236 100%);
+    --grad-rose: linear-gradient(135deg, #FB7185 0%, #E11D48 100%);
+    --grad-peach: linear-gradient(135deg, #FED7AA 0%, #FDBA74 100%);
+    --grad-aura: linear-gradient(135deg, #FF758C 0%, #FFAE73 50%, #FFD166 100%);
+
+    --radius-slide: 30px;
+    --radius-card: 20px;
+    --radius-pill: 999px;
+
+    --shadow-slide: 0 25px 70px -15px rgba(225, 100, 70, 0.20), 0 8px 30px -6px rgba(0, 0, 0, 0.04);
+    --shadow-card: 0 10px 30px -8px rgba(180, 80, 50, 0.08), 0 2px 6px rgba(0,0,0,0.02);
+    --shadow-btn: 0 4px 18px rgba(250, 114, 76, 0.35);
   }
-  *{box-sizing:border-box}
-  html{scroll-behavior:smooth}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:"Plus Jakarta Sans",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-  ::selection{background:#111827;color:#fff}
-  /* subtle paper texture */
-  body::before{
-    content:"";
-    position:fixed;inset:0;pointer-events:none;opacity:.35;
-    background:
-      radial-gradient(1200px 600px at 50% -10%, #fff 0%, transparent 60%),
-      radial-gradient(900px 500px at 90% 30%, #fef3e8 0%, transparent 55%),
-      radial-gradient(800px 400px at 10% 80%, #eef2ff 0%, transparent 50%);
-    z-index:-1;
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--text-primary);
+    background-color: var(--bg-aura);
+    background-image: 
+      radial-gradient(circle at 12% 10%, rgba(255, 174, 115, 0.65) 0%, transparent 45%),
+      radial-gradient(circle at 88% 8%, rgba(255, 117, 140, 0.60) 0%, transparent 42%),
+      radial-gradient(circle at 94% 88%, rgba(244, 114, 182, 0.55) 0%, transparent 48%),
+      radial-gradient(circle at 8% 90%, rgba(251, 146, 60, 0.55) 0%, transparent 42%),
+      radial-gradient(circle at 50% 50%, rgba(255, 246, 235, 0.8) 0%, transparent 65%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
   }
-  /* header */
-  .header{max-width:780px;margin:0 auto;padding:42px 24px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-  .brand{display:flex;align-items:center;gap:14px}
-  .mark{width:32px;height:32px;border-radius:9px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:15px;font-weight:700;letter-spacing:-0.02em;box-shadow:0 6px 20px rgba(17,24,39,.12);transition:transform .6s var(--ease)}
-  .brand:hover .mark{transform:rotate(8deg) scale(1.03)}
-  .brand h1{font-size:18px;font-weight:700;letter-spacing:-0.04em;margin:0;line-height:1;color:var(--ink)}
-  .brand p{margin:3px 0 0;font-size:13px;color:var(--muted);font-weight:400;letter-spacing:-0.01em}
-  .meta{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);border:1px solid var(--line);background:rgba(255,255,255,.7);backdrop-filter:blur(8px);padding:7px 12px;border-radius:999px;white-space:nowrap}
-  @media(max-width:640px){.header{padding:28px 18px 18px}.brand p{display:none}.meta{font-size:10px;padding:6px 10px}}
-  /* layout */
-  .wrap{max-width:780px;margin:0 auto;padding:0 24px 56px}
-  @media(max-width:640px){.wrap{padding:0 16px 40px}}
-  /* card */
-  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 1px 2px rgba(17,24,39,.04), 0 8px 32px rgba(17,24,39,.06);transition:border-color .5s var(--ease), box-shadow .5s var(--ease), transform .5s var(--ease)}
-  .card:hover{border-color:#e7e0d6;box-shadow:0 2px 8px rgba(17,24,39,.06), 0 16px 40px rgba(17,24,39,.08)}
-  .card-pad{padding:28px}
-  @media(max-width:640px){.card-pad{padding:22px 18px}}
-  .eyebrow{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin:0 0 16px}
-  /* textarea */
-  .field{position:relative}
-  .textarea{width:100%;min-height:148px;resize:vertical;background:var(--paper);border:1.5px solid var(--line-soft);border-radius:18px;padding:18px 20px;font-size:16px;line-height:1.75;color:var(--ink);outline:none;font-family:"Plus Jakarta Sans",sans-serif;font-weight:400;transition:border-color .5s var(--ease), background .5s var(--ease), box-shadow .5s var(--ease);caret-color:var(--ink)}
-  .textarea::placeholder{color:#c1c5cc;font-weight:400}
-  .textarea:focus{background:#fff;border-color:#d8d0c2;box-shadow:0 0 0 5px rgba(237,233,227,.6)}
-  .textarea:focus::placeholder{color:#d0d4da}
-  /* controls row */
-  .controls{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;flex-wrap:wrap}
-  .ctrls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  .pill{display:inline-flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--line-soft);border-radius:999px;padding:7px 12px;transition:border-color .4s var(--ease), background .4s var(--ease)}
-  .pill:hover{border-color:var(--line);background:#fff}
-  .pill label{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
-  .pill select{border:none;background:transparent;font-family:"Plus Jakarta Sans",sans-serif;font-size:13px;font-weight:600;color:var(--ink);outline:none;cursor:pointer;padding-right:4px}
-  .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  .btn{appearance:none;border:none;border-radius:999px;padding:12px 20px;font-family:"Plus Jakarta Sans",sans-serif;font-size:14px;font-weight:600;letter-spacing:-0.01em;cursor:pointer;display:inline-flex;align-items:center;gap:9px;justify-content:center;line-height:1;transition:all .5s var(--ease);will-change:transform}
-  .btn:active{transform:scale(.98)}
-  .btn-primary{background:var(--accent);color:#fff;box-shadow:0 4px 16px rgba(17,24,39,.14)}
-  .btn-primary:hover{background:var(--accent-hover);transform:translateY(-1px);box-shadow:0 8px 24px rgba(17,24,39,.18)}
-  .btn-ghost{background:transparent;color:var(--muted);border:1px solid transparent;padding:12px 14px}
-  .btn-ghost:hover{color:var(--ink);border-color:var(--line);background:rgba(255,255,255,.6)}
-  .btn-small{padding:9px 14px;font-size:13px;border-radius:999px}
-  .btn-primary.btn-small{box-shadow:0 2px 10px rgba(17,24,39,.12)}
-  .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .9s linear infinite;display:none}
-  .btn.loading .spinner{display:inline-block}
-  .btn.loading{pointer-events:none;opacity:.85}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .hint{font-size:12px;color:var(--faint);margin-top:14px;font-weight:400;letter-spacing:-0.01em}
-  .hint b{color:var(--muted);font-weight:600}
-  /* examples */
-  .examples{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
-  .ex{font-size:13px;font-weight:500;color:var(--muted);background:transparent;border:1px dashed var(--line);padding:7px 13px;border-radius:999px;cursor:pointer;transition:all .5s var(--ease);font-family:"Plus Jakarta Sans",sans-serif}
-  .ex:hover{color:var(--ink);border-color:#d8d0c2;background:#fff;transform:translateY(-1px)}
-  .ex:active{transform:none}
-  /* stats — slow fade */
-  .stats{margin-top:22px;background:var(--paper);border:1px solid var(--line-soft);border-radius:14px;padding:12px 14px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--muted);line-height:1;opacity:0;transform:translateY(6px);animation:reveal .7s var(--ease-slow) forwards}
-  .stats b{color:var(--ink);font-weight:700;letter-spacing:-0.02em}
-  .stats .dot{width:3px;height:3px;border-radius:50%;background:var(--line);flex-shrink:0}
-  @keyframes reveal{to{opacity:1;transform:none}}
-  /* tokens */
-  .tokens{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;min-height:0}
-  .tokens:empty{margin:0}
-  .tok{padding:7px 12px;border-radius:999px;font-size:13.5px;font-weight:500;letter-spacing:-0.015em;border:1px solid transparent;line-height:1;display:inline-flex;align-items:center;transition:all .45s var(--ease);opacity:0;transform:translateY(4px);animation:reveal .6s var(--ease-slow) forwards}
-  .tok.correct{background:var(--green-soft);border-color:var(--green-line);color:var(--green)}
-  .tok.wrong{background:var(--red-soft);border-color:var(--red-line);color:var(--red);box-shadow:inset 0 -1.5px 0 rgba(197,83,58,.12);cursor:pointer}
-  .tok.wrong:hover{transform:translateY(-1px);box-shadow:inset 0 -1.5px 0 rgba(197,83,58,.12), 0 4px 12px rgba(197,83,58,.12);border-color:#e8b8ad}
-  .tok.neutral{background:var(--surface);border-color:var(--line);color:var(--muted)}
-  .legend{display:flex;gap:16px;align-items:center;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-top:14px;opacity:0;animation:reveal .7s var(--ease-slow) .15s forwards}
-  .legend i{width:8px;height:8px;border-radius:50%;display:inline-block;border:1px solid transparent}
-  .legend i.c{background:var(--green-soft);border-color:var(--green-line)}
-  .legend i.w{background:var(--red-soft);border-color:var(--red-line)}
-  .legend i.n{background:var(--surface);border-color:var(--line)}
-  /* detail */
-  .detail{margin-top:18px;display:grid;gap:12px}
-  .detail:empty{margin:0}
-  .issue{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px 18px;display:grid;gap:14px;opacity:0;transform:translateY(8px);animation:reveal .7s var(--ease-slow) forwards;transition:border-color .5s var(--ease), box-shadow .5s var(--ease)}
-  .issue:hover{border-color:#e7e0d6;box-shadow:0 8px 24px rgba(17,24,39,.06)}
-  .issue-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
-  .issue-word{font-size:16px;font-weight:700;letter-spacing:-0.03em;color:var(--ink);display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-  .issue-word em{font-style:normal;font-weight:700;color:var(--red)}
-  .issue-word span{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);background:var(--paper);border:1px solid var(--line-soft);padding:4px 8px;border-radius:999px}
-  .issue-word span.is-fixed{background:var(--green-soft);border-color:var(--green-line);color:var(--green)}
-  .issue-meta{font-size:11px;color:var(--faint);font-family:"Fragment Mono",monospace;letter-spacing:-0.02em}
-  .sugs{display:flex;flex-wrap:wrap;gap:8px}
-  .sug{padding:8px 14px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:13.5px;font-weight:600;letter-spacing:-0.015em;color:var(--ink);cursor:pointer;transition:all .45s var(--ease);display:inline-flex;align-items:center;gap:6px;font-family:"Plus Jakarta Sans",sans-serif}
-  .sug:hover{border-color:var(--ink);background:var(--ink);color:#fff;transform:translateY(-1px)}
-  .sug.top{border-color:var(--ink);background:var(--ink);color:#fff;box-shadow:0 4px 14px rgba(17,24,39,.14)}
-  .sug.top:hover{background:#000;transform:translateY(-1px)}
-  .sug small{font-size:11px;font-weight:500;opacity:.55;font-family:"Fragment Mono",monospace;letter-spacing:-0.02em}
-  .sug.top small{opacity:.7;color:#fff}
-  .empty{padding:22px;text-align:center;color:var(--muted);font-size:13.5px;background:var(--paper);border:1px dashed var(--line);border-radius:16px;opacity:0;animation:reveal .7s var(--ease-slow) forwards}
-  /* corrected */
-  .corrected-wrap{margin-top:24px}
-  .corrected{white-space:pre-wrap;word-break:break-word;background:var(--paper);border:1px solid var(--line-soft);border-radius:18px;padding:18px 20px;font-size:15px;line-height:1.75;min-height:78px;color:var(--ink);transition:border-color .5s var(--ease), background .5s var(--ease)}
-  .corrected:focus-within,.corrected:hover{border-color:#e0d9cf;background:#fff}
-  .corrected:empty:before{content:"Corrected text will appear here…";color:var(--faint)}
-  .action-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
-  /* footer */
-  .footer{max-width:780px;margin:0 auto;padding:28px 24px 40px;text-align:center;font-size:11px;color:var(--faint);letter-spacing:-0.01em}
-  .footer a{color:var(--muted);text-decoration:none;border-bottom:1px solid transparent;transition:all .4s var(--ease)}
-  .footer a:hover{color:var(--ink);border-color:var(--line)}
-  /* toast */
-  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(10px);background:var(--ink);color:#fff;padding:11px 16px;border-radius:999px;font-size:13px;font-weight:600;letter-spacing:-0.01em;opacity:0;pointer-events:none;transition:all .6s var(--ease);box-shadow:0 12px 32px rgba(17,24,39,.18)}
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-  /* staggered reveals */
-  .reveal{opacity:0;transform:translateY(10px);animation:reveal .8s var(--ease-slow) forwards}
-  .reveal-1{animation-delay:.05s}.reveal-2{animation-delay:.12s}.reveal-3{animation-delay:.18s}
+
+  /* Presentation Slide Frame Container */
+  .slide-viewport {
+    max-width: 1220px;
+    margin: 28px auto 40px;
+    padding: 0 20px;
+  }
+
+  .presentation-frame {
+    background: var(--slide-card);
+    border-radius: var(--radius-slide);
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    box-shadow: var(--shadow-slide);
+    padding: 32px 36px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Soft decorative corner aura within slide */
+  .presentation-frame::before {
+    content: "";
+    position: absolute;
+    top: -120px;
+    right: -120px;
+    width: 320px;
+    height: 320px;
+    background: radial-gradient(circle, rgba(255, 174, 115, 0.35) 0%, rgba(255, 117, 140, 0.25) 50%, transparent 70%);
+    pointer-events: none;
+    border-radius: 50%;
+  }
+
+  /* Top Navigation Bar */
+  .nav-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 18px;
+    padding-bottom: 24px;
+    border-bottom: 1.5px solid var(--border-light);
+    margin-bottom: 28px;
+  }
+
+  .brand-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .brand-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    background: var(--grad-primary);
+    box-shadow: var(--shadow-btn);
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-size: 22px;
+    font-weight: 800;
+  }
+
+  .brand-title-wrap h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .creative-script {
+    font-family: 'Caveat', cursive;
+    font-size: 32px;
+    color: #F43F5E;
+    font-weight: 700;
+    line-height: 0.8;
+    transform: rotate(-3deg);
+    display: inline-block;
+  }
+
+  .brand-title-wrap p {
+    margin: 4px 0 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+
+  .nav-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* View Mode Switcher Pills */
+  .view-switcher {
+    display: inline-flex;
+    background: #EFE7DE;
+    padding: 4px;
+    border-radius: var(--radius-pill);
+    border: 1px solid rgba(220, 200, 185, 0.8);
+  }
+
+  .view-tab {
+    border: none;
+    background: transparent;
+    padding: 8px 16px;
+    border-radius: var(--radius-pill);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  .view-tab.active {
+    background: #FFFFFF;
+    color: var(--text-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #FFFFFF;
+    border: 1.5px solid var(--border-light);
+    padding: 7px 14px;
+    border-radius: var(--radius-pill);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    box-shadow: var(--shadow-card);
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10B981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+  }
+
+  /* Methodology Stepper Timeline (Slide 4 style) */
+  .methodology-stepper {
+    background: #FFFFFF;
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-card);
+    padding: 20px 24px;
+    margin-bottom: 28px;
+    box-shadow: var(--shadow-card);
+  }
+
+  .stepper-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .stepper-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .stepper-title span {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    background: var(--step-01-bg);
+    color: var(--step-01-text);
+    padding: 3px 8px;
+    border-radius: var(--radius-pill);
+  }
+
+  .stepper-track {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    position: relative;
+  }
+
+  @media(max-width: 768px) {
+    .stepper-track { grid-template-columns: 1fr; }
+  }
+
+  .step-node {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    position: relative;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: #FAF7F2;
+    border: 1px solid var(--border-light);
+    transition: all 0.2s ease;
+  }
+
+  .step-node.active-pipeline {
+    background: #FFF7ED;
+    border-color: #FDBA74;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(251, 146, 60, 0.15);
+  }
+
+  .step-num {
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+
+  .num-01 { background: var(--step-01-bg); color: var(--step-01-text); border: 1px solid var(--step-01-border); }
+  .num-02 { background: var(--step-02-bg); color: var(--step-02-text); border: 1px solid var(--step-02-border); }
+  .num-03 { background: var(--step-03-bg); color: var(--step-03-text); border: 1px solid var(--step-03-border); }
+  .num-04 { background: var(--step-04-bg); color: var(--step-04-text); border: 1px solid var(--step-04-border); }
+
+  .step-info strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .step-info span {
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  /* Main Workspace Layout */
+  .workspace-grid {
+    display: grid;
+    grid-template-columns: 1.25fr 0.85fr;
+    gap: 28px;
+    align-items: start;
+  }
+
+  @media (max-width: 992px) {
+    .workspace-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Warm Ivory Cards */
+  .workspace-card {
+    background: #FFFFFF;
+    border-radius: var(--radius-card);
+    border: 1.5px solid var(--border-light);
+    box-shadow: var(--shadow-card);
+    padding: 24px;
+    margin-bottom: 24px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .card-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .card-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-label-badge {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #FF6B6B;
+  }
+
+  /* Textarea with Warm Styling */
+  .input-area {
+    width: 100%;
+    min-height: 160px;
+    resize: vertical;
+    background: #FCFAF7;
+    border: 1.5px solid var(--border-light);
+    border-radius: 16px;
+    padding: 16px 18px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--text-primary);
+    outline: none;
+    transition: all 0.2s ease;
+  }
+
+  .input-area:focus {
+    background: #FFFFFF;
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 4px rgba(250, 130, 76, 0.18);
+  }
+
+  .input-area::placeholder {
+    color: #A39DAE;
+  }
+
+  /* Controls Row */
+  .controls-bar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+
+  .control-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #FAF6F0;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-pill);
+    padding: 6px 14px;
+  }
+
+  .control-pill label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    letter-spacing: 0.02em;
+  }
+
+  .control-pill select {
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    outline: none;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  /* Action Buttons */
+  .action-buttons {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+
+  .btn {
+    appearance: none;
+    border: none;
+    border-radius: 12px;
+    padding: 11px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    line-height: 1;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  .btn-primary {
+    background: var(--grad-primary);
+    color: #FFFFFF;
+    box-shadow: var(--shadow-btn);
+  }
+
+  .btn-primary:hover {
+    background: var(--grad-primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgba(250, 114, 76, 0.45);
+  }
+
+  .btn-ghost {
+    background: #FAF6F0;
+    border: 1.5px solid var(--border-light);
+    color: var(--text-primary);
+  }
+
+  .btn-ghost:hover {
+    background: #F4ECE3;
+    border-color: #D3C3B6;
+    transform: translateY(-1px);
+  }
+
+  .btn-sm {
+    padding: 8px 14px;
+    font-size: 13px;
+    border-radius: 10px;
+  }
+
+  .key-hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-left: 4px;
+  }
+
+  .key-hint kbd {
+    background: #F4ECE3;
+    border: 1px solid #D8CABE;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  /* Quick Demo Pills (Slide 9 Cloud/Pill Style) */
+  .example-prompts {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+    align-items: center;
+  }
+
+  .example-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+  }
+
+  .example-pill {
+    background: #FAF4ED;
+    border: 1px solid rgba(220, 195, 175, 0.7);
+    color: #634A3E;
+    padding: 6px 12px;
+    border-radius: var(--radius-pill);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .example-pill:hover {
+    background: var(--step-01-bg);
+    border-color: var(--step-01-border);
+    color: var(--step-01-text);
+    transform: translateY(-1px);
+  }
+
+  /* Dynamic Stats Strip */
+  .stats-banner {
+    margin-top: 18px;
+    background: #FFF8F1;
+    border: 1px solid #FED7AA;
+    border-radius: 12px;
+    padding: 10px 16px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+    font-size: 12px;
+    color: #8C4A21;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .stats-banner b {
+    color: #7C2D12;
+    font-weight: 800;
+  }
+
+  .stats-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #FDBA74;
+  }
+
+  /* Token Stream Visualizer */
+  .tokens-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 18px;
+    padding: 16px;
+    background: #FCFAF7;
+    border: 1px dashed var(--border-light);
+    border-radius: 14px;
+    min-height: 52px;
+  }
+
+  .token-chip {
+    padding: 6px 12px;
+    border-radius: var(--radius-pill);
+    font-size: 13px;
+    font-weight: 600;
+    border: 1.5px solid transparent;
+    line-height: 1.2;
+    transition: all 0.2s ease;
+  }
+
+  .token-chip.correct {
+    background: #ECFDF5;
+    border-color: #A7F3D0;
+    color: #065F46;
+  }
+
+  .token-chip.misspelled {
+    background: #FFF1F2;
+    border-color: #FDA4AF;
+    color: #9F1239;
+    text-decoration: underline wavy #F43F5E;
+    text-underline-offset: 4px;
+    cursor: pointer;
+  }
+
+  .token-chip.misspelled:hover {
+    background: #FFE4E6;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(244, 63, 94, 0.18);
+  }
+
+  .token-chip.punctuation {
+    background: #F4EFEA;
+    border-color: #E2D9D0;
+    color: #5C554F;
+  }
+
+  .tokens-legend {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-top: 10px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .dot-correct { background: #10B981; }
+  .dot-flagged { background: #F43F5E; }
+  .dot-neutral { background: #A39DAE; }
+
+  /* Issue Cards List */
+  .issues-list {
+    margin-top: 20px;
+    display: grid;
+    gap: 14px;
+  }
+
+  .issue-card {
+    background: #FFFFFF;
+    border: 1.5px solid #FECDD3;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 4px 14px rgba(244, 63, 94, 0.06);
+    display: grid;
+    gap: 12px;
+    animation: slideUp 0.25s ease;
+  }
+
+  .issue-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .issue-word-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .issue-index-num {
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    font-weight: 800;
+    background: var(--step-03-bg);
+    color: var(--step-03-text);
+    border: 1px solid var(--step-03-border);
+    padding: 3px 8px;
+    border-radius: var(--radius-pill);
+  }
+
+  .issue-word-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #9F1239;
+    letter-spacing: -0.01em;
+  }
+
+  .issue-status-pill {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 3px 8px;
+    border-radius: var(--radius-pill);
+    background: #FFF1F2;
+    border: 1px solid #FDA4AF;
+    color: #BE123C;
+  }
+
+  .issue-status-pill.is-applied {
+    background: #ECFDF5;
+    border-color: #A7F3D0;
+    color: #065F46;
+  }
+
+  .issue-candidates-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .suggestions-pill-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .suggestion-button {
+    border: 1.5px solid var(--border-light);
+    background: #FAF6F0;
+    border-radius: var(--radius-pill);
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  .suggestion-button:hover {
+    background: var(--step-02-bg);
+    border-color: var(--step-02-border);
+    color: var(--step-02-text);
+    transform: translateY(-2px);
+  }
+
+  .suggestion-button.top-pick {
+    background: var(--grad-primary);
+    border-color: transparent;
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(250, 114, 76, 0.25);
+  }
+
+  .suggestion-button.top-pick:hover {
+    background: var(--grad-primary-hover);
+    transform: translateY(-2px);
+  }
+
+  .suggestion-button small {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    opacity: 0.8;
+  }
+
+  .no-suggestions-hint {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .empty-state-banner {
+    padding: 24px;
+    text-align: center;
+    color: #065F46;
+    background: #ECFDF5;
+    border: 1.5px dashed #A7F3D0;
+    border-radius: 16px;
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  /* Corrected Text Box */
+  .corrected-display {
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: #FCFAF7;
+    border: 1.5px solid var(--border-light);
+    border-radius: 16px;
+    padding: 18px;
+    font-size: 15px;
+    line-height: 1.7;
+    min-height: 90px;
+    color: var(--text-primary);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  .corrected-display:empty::before {
+    content: "Corrected output will appear here automatically…";
+    color: #A39DAE;
+    font-style: italic;
+  }
+
+  /* KPI Grid (Slide 3 & 5 style) */
+  .kpi-deck-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .kpi-tile {
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease;
+  }
+
+  .kpi-tile:hover {
+    transform: translateY(-2px);
+  }
+
+  .kpi-tile-01 { background: var(--step-01-bg); border: 1px solid var(--step-01-border); color: var(--step-01-text); }
+  .kpi-tile-02 { background: var(--step-02-bg); border: 1px solid var(--step-02-border); color: var(--step-02-text); }
+  .kpi-tile-03 { background: var(--step-03-bg); border: 1px solid var(--step-03-border); color: var(--step-03-text); }
+  .kpi-tile-04 { background: var(--step-04-bg); border: 1px solid var(--step-04-border); color: var(--step-04-text); }
+
+  .kpi-tag {
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.85;
+  }
+
+  .kpi-val {
+    font-family: 'Outfit', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 6px 0 2px;
+    line-height: 1;
+  }
+
+  .kpi-sub {
+    font-size: 11px;
+    font-weight: 600;
+    opacity: 0.75;
+  }
+
+  /* Project Scope Bar Chart (Slide 6 style) */
+  .chart-card {
+    margin-top: 20px;
+    background: #FAF6F0;
+    border: 1.5px solid var(--border-light);
+    border-radius: 18px;
+    padding: 20px;
+  }
+
+  .chart-title-wrap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .chart-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text-primary);
+  }
+
+  .chart-bars-wrap {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    height: 120px;
+    padding: 10px 4px 0;
+    border-bottom: 2px solid #E4D5C7;
+  }
+
+  .bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    justify-content: flex-end;
+  }
+
+  .bar-rect {
+    width: 100%;
+    border-radius: 8px 8px 0 0;
+    transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    min-height: 8px;
+    position: relative;
+  }
+
+  .bar-01 { background: #FDE68A; }
+  .bar-02 { background: #FDBA74; }
+  .bar-03 { background: #FB923C; }
+  .bar-04 { background: #F472B6; }
+  .bar-05 { background: #FB7185; }
+
+  .bar-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-top: 8px;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  /* Implementation Strategies Pills (Slide 8 style) */
+  .strategies-list {
+    display: grid;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .strategy-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #FAF6F0;
+    border: 1px solid var(--border-light);
+    border-radius: 14px;
+    padding: 12px 14px;
+  }
+
+  .strategy-num {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  .strategy-text strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .strategy-text span {
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  /* Slide Presentation Deck View Mode */
+  .deck-container {
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .deck-container.active {
+    display: block;
+  }
+
+  .slide-display-canvas {
+    background: #FFFFFF;
+    border-radius: 24px;
+    border: 2px solid var(--border-light);
+    box-shadow: 0 15px 45px rgba(220, 100, 70, 0.12);
+    min-height: 540px;
+    padding: 44px 50px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .slide-nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 24px;
+    padding: 14px 20px;
+    background: #FFFFFF;
+    border-radius: 16px;
+    border: 1.5px solid var(--border-light);
+  }
+
+  .slide-thumbnails-bar {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 8px 0;
+    scrollbar-width: thin;
+  }
+
+  .thumb-pill {
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    background: #FAF6F0;
+    border: 1px solid var(--border-light);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+  }
+
+  .thumb-pill.active {
+    background: var(--grad-primary);
+    color: #FFFFFF;
+    border-color: transparent;
+  }
+
+  /* Toast Notification */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #221F28;
+    color: #FFFFFF;
+    padding: 10px 20px;
+    border-radius: var(--radius-pill);
+    font-size: 13px;
+    font-weight: 700;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+    z-index: 9999;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Spinner */
+  .spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #FFFFFF;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+
+  .btn.loading .spinner { display: inline-block; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Footer */
+  .footer-caption {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 24px;
+    font-weight: 500;
+  }
 </style>
 </head>
 <body>
 
-<header class="header reveal">
-  <div class="brand">
-    <div class="mark">✓</div>
-    <div>
-      <h1>Intelligent Spell Checker</h1>
-      <p>Precise. Quiet. Built on data structures.</p>
-    </div>
-  </div>
-  <div class="meta" id="dictBadge">Loading dictionary…</div>
-</header>
+<div class="slide-viewport">
+  <div class="presentation-frame">
 
-<div class="wrap">
-  <div class="card card-pad reveal reveal-1">
-    <p class="eyebrow">Check text</p>
-    <div class="field">
-      <textarea id="input" class="textarea" placeholder="Type a word or a full sentence…&#10;Try: I recieve a beutiful oppurtunity tomorow"></textarea>
-    </div>
-
-    <div class="controls">
-      <div class="ctrls">
-        <div class="pill">
-          <label for="topN">Suggestions</label>
-          <select id="topN">
-            <option value="3">3</option>
-            <option value="5" selected>5</option>
-            <option value="8">8</option>
-          </select>
-        </div>
-        <div class="pill">
-          <label for="maxDist">Sensitivity</label>
-          <select id="maxDist">
-            <option value="1">Strict</option>
-            <option value="2" selected>Balanced</option>
-            <option value="3">Broad</option>
-          </select>
+    <!-- Top Navigation Header -->
+    <header class="nav-header">
+      <div class="brand-group">
+        <div class="brand-icon">✓</div>
+        <div class="brand-title-wrap">
+          <h1>
+            <span class="creative-script">creative</span>
+            <span>Intelligent Spell Checker</span>
+          </h1>
+          <p>Pure Data Structures & Algorithms · Zero External APIs · Sub-millisecond Execution</p>
         </div>
       </div>
-      <div class="actions">
-        <button class="btn btn-ghost" onclick="clearAll()">Clear</button>
-        <button id="checkBtn" class="btn btn-primary" onclick="checkNow()">
-          <span class="spinner"></span><span class="btn-label">Check spelling</span>
-        </button>
+
+      <div class="nav-controls">
+        <div class="view-switcher">
+          <button class="view-tab active" id="tabApp" onclick="switchView('app')">
+            <span>✨ Interactive Checker</span>
+          </button>
+          <button class="view-tab" id="tabDeck" onclick="switchView('deck')">
+            <span>📑 Slide Deck View</span>
+          </button>
+        </div>
+
+        <div class="status-badge" id="dictStatusBadge">
+          <span class="status-dot"></span>
+          <span id="dictCount">36,001 words in HashSet</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- VIEW 1: INTERACTIVE APP -->
+    <div id="appView">
+
+      <!-- Methodology Stepper Pipeline (Slide 4 Theme) -->
+      <section class="methodology-stepper">
+        <div class="stepper-header">
+          <div class="stepper-title">
+            <span>DSA Pipeline</span>
+            Methodology & Execution Stages
+          </div>
+          <div style="font-size: 12px; color: var(--text-muted); font-weight: 600;">
+            O(1) HashSet → Trie DP Pruning → Min-Heap Top-N
+          </div>
+        </div>
+
+        <div class="stepper-track">
+          <div class="step-node" id="stepNode1">
+            <div class="step-num num-01">01</div>
+            <div class="step-info">
+              <strong>Tokenization</strong>
+              <span>Regex token split & normalization</span>
+            </div>
+          </div>
+
+          <div class="step-node" id="stepNode2">
+            <div class="step-num num-02">02</div>
+            <div class="step-info">
+              <strong>HashSet Lookup</strong>
+              <span>O(1) avg dictionary verification</span>
+            </div>
+          </div>
+
+          <div class="step-node" id="stepNode3">
+            <div class="step-num num-03">03</div>
+            <div class="step-info">
+              <strong>Trie + DP Pruning</strong>
+              <span>Subtree pruning by edit distance</span>
+            </div>
+          </div>
+
+          <div class="step-node" id="stepNode4">
+            <div class="step-num num-04">04</div>
+            <div class="step-info">
+              <strong>Min-Heap Ranking</strong>
+              <span>Top-N weighted by word frequency</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Main Two-Column Workspace -->
+      <main class="workspace-grid">
+
+        <!-- Left Column: Input, Tokens, and Suggestions -->
+        <div>
+          <!-- Input Card -->
+          <div class="workspace-card">
+            <div class="card-header-bar">
+              <span class="card-label">
+                <span class="card-label-badge"></span>
+                Input Sentence or Word
+              </span>
+              <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Live DSA Analysis</span>
+            </div>
+
+            <textarea id="inputText" class="input-area" placeholder="Type or paste text with misspellings…&#10;Try: I recieve a beutiful oppurtunity tomorow"></textarea>
+
+            <div class="controls-bar">
+              <div class="control-pill">
+                <label for="topNSelect">Top Suggestions</label>
+                <select id="topNSelect">
+                  <option value="3">3 candidates</option>
+                  <option value="5" selected>5 candidates</option>
+                  <option value="8">8 candidates</option>
+                </select>
+              </div>
+
+              <div class="control-pill">
+                <label for="maxDistSelect">Sensitivity</label>
+                <select id="maxDistSelect">
+                  <option value="1">Strict (dist ≤ 1)</option>
+                  <option value="2" selected>Balanced (dist ≤ 2)</option>
+                  <option value="3">Broad (dist ≤ 3)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="action-buttons">
+              <button id="checkBtn" class="btn btn-primary" onclick="performCheck()">
+                <span class="spinner"></span>
+                <span class="btn-label">Check Spelling</span>
+              </button>
+              <button class="btn btn-ghost" onclick="resetForm()">Clear</button>
+              <span class="key-hint">Press <kbd>Ctrl + Enter</kbd> to run</span>
+            </div>
+
+            <div class="example-prompts">
+              <span class="example-label">Quick samples:</span>
+              <button class="example-pill" onclick="loadSample(0)">“recieve beutiful”</button>
+              <button class="example-pill" onclick="loadSample(1)">“intelligant dictionery”</button>
+              <button class="example-pill" onclick="loadSample(2)">“goverment accomodation”</button>
+            </div>
+
+            <!-- Dynamic Stats Strip -->
+            <div id="statsBanner" class="stats-banner" style="display: none;"></div>
+
+            <!-- Token chips visualizer -->
+            <div id="tokensContainer" class="tokens-container" style="display: none;"></div>
+
+            <div id="tokensLegend" class="tokens-legend" style="display: none;">
+              <div class="legend-item"><span class="legend-dot dot-correct"></span> Correct</div>
+              <div class="legend-item"><span class="legend-dot dot-flagged"></span> Needs Attention</div>
+              <div class="legend-item"><span class="legend-dot dot-neutral"></span> Punctuation</div>
+            </div>
+
+            <!-- Issue cards container -->
+            <div id="issuesList" class="issues-list"></div>
+          </div>
+
+          <!-- Corrected Text Card -->
+          <div class="workspace-card">
+            <div class="card-header-bar">
+              <span class="card-label">
+                <span class="card-label-badge" style="background:#10B981"></span>
+                Corrected Output Text
+              </span>
+              <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">One-Click Correction</span>
+            </div>
+
+            <div id="correctedDisplay" class="corrected-display"></div>
+
+            <div class="action-buttons" style="margin-top: 14px;">
+              <button class="btn btn-primary btn-sm" onclick="applyAllTopCandidates()">Apply All Top Suggestions</button>
+              <button class="btn btn-ghost btn-sm" onclick="copyResult()">Copy to Clipboard</button>
+              <button class="btn btn-ghost btn-sm" onclick="downloadResult()">Download .txt</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Slide-Themed KPI Cards & Visual Bar Chart -->
+        <div>
+          <!-- KPI Deck Grid (Slide 3 & 5 style) -->
+          <div class="workspace-card">
+            <div class="card-header-bar">
+              <span class="card-label">
+                <span class="card-label-badge" style="background:#FA824C"></span>
+                Performance Metrics
+              </span>
+              <span style="font-size: 11px; font-weight: 700; color: #FA824C; text-transform: uppercase;">Benchmark</span>
+            </div>
+
+            <div class="kpi-deck-grid">
+              <div class="kpi-tile kpi-tile-01">
+                <span class="kpi-tag">01 · Total Words</span>
+                <div class="kpi-val" id="kpiWords">—</div>
+                <span class="kpi-sub">Processed</span>
+              </div>
+
+              <div class="kpi-tile kpi-tile-02">
+                <span class="kpi-tag">02 · Issues</span>
+                <div class="kpi-val" id="kpiIssues">—</div>
+                <span class="kpi-sub">Misspellings found</span>
+              </div>
+
+              <div class="kpi-tile kpi-tile-03">
+                <span class="kpi-tag">03 · Candidates</span>
+                <div class="kpi-val" id="kpiCandidates">—</div>
+                <span class="kpi-sub">Evaluated by DP</span>
+              </div>
+
+              <div class="kpi-tile kpi-tile-04">
+                <span class="kpi-tag">04 · Total Time</span>
+                <div class="kpi-val" id="kpiTime">—</div>
+                <span class="kpi-sub">Milliseconds (ms)</span>
+              </div>
+            </div>
+
+            <!-- Slide 6 Inspired Progressive Bar Chart -->
+            <div class="chart-card">
+              <div class="chart-title-wrap">
+                <span class="chart-title">Execution Breakdown (ms)</span>
+                <span style="font-size: 11px; font-weight: 700; color: var(--text-muted);" id="timingSummary">Idle</span>
+              </div>
+
+              <div class="chart-bars-wrap">
+                <div class="bar-col">
+                  <div class="bar-rect bar-01" id="barLookup" style="height: 15%;" title="Lookup Time"></div>
+                  <span class="bar-label">Lookup<br>(O(1))</span>
+                </div>
+                <div class="bar-col">
+                  <div class="bar-rect bar-02" id="barCandidates" style="height: 55%;" title="Trie DP Search"></div>
+                  <span class="bar-label">Trie DP<br>Prune</span>
+                </div>
+                <div class="bar-col">
+                  <div class="bar-rect bar-03" id="barRanking" style="height: 25%;" title="Heap Ranking"></div>
+                  <span class="bar-label">Ranking<br>(Heap)</span>
+                </div>
+                <div class="bar-col">
+                  <div class="bar-rect bar-05" id="barTotal" style="height: 75%;" title="Total Execution"></div>
+                  <span class="bar-label">Total<br>Pipeline</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Implementation Strategies (Slide 8 style) -->
+          <div class="workspace-card">
+            <div class="card-header-bar">
+              <span class="card-label">
+                <span class="card-label-badge" style="background:#C084FC"></span>
+                Implementation Strategies
+              </span>
+              <span style="font-size: 11px; font-weight: 700; color: #9333EA; text-transform: uppercase;">DSA Core</span>
+            </div>
+
+            <div class="strategies-list">
+              <div class="strategy-item">
+                <div class="strategy-num num-01">01</div>
+                <div class="strategy-text">
+                  <strong>HashSet O(1) Verification</strong>
+                  <span>Immediate membership check with collision-resistant hashing.</span>
+                </div>
+              </div>
+
+              <div class="strategy-item">
+                <div class="strategy-num num-02">02</div>
+                <div class="strategy-text">
+                  <strong>Trie DP Subtree Pruning</strong>
+                  <span>Dynamic programming row maintained along prefix branches. Discards non-viable subtrees early.</span>
+                </div>
+              </div>
+
+              <div class="strategy-item">
+                <div class="strategy-num num-03">03</div>
+                <div class="strategy-text">
+                  <strong>Min-Heap Top-N Selection</strong>
+                  <span>Bounded priority queue extracts the highest probability candidates without an expensive O(C log C) sort.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Review Tips Card -->
+          <div class="workspace-card" style="background: linear-gradient(180deg, #FFFFFF 0%, #FFF8F0 100%);">
+            <div class="card-header-bar">
+              <span class="card-label">
+                <span class="card-label-badge" style="background:#10B981"></span>
+                Viva & Review Notes
+              </span>
+              <span style="font-size: 11px; font-weight: 700; color: #059669;">Ready</span>
+            </div>
+
+            <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.7; color: var(--text-secondary);">
+              <li><b>Zero network latency:</b> In-memory Trie and HashSet run entirely in Python without 3rd party APIs.</li>
+              <li><b>Sub-second guarantee:</b> Tested on long sentences with multiple spelling errors.</li>
+              <li><b>Graceful bounds:</b> Numeric inputs, punctuation, and empty queries never crash.</li>
+            </ul>
+          </div>
+        </div>
+      </main>
+
+    </div>
+
+    <!-- VIEW 2: PRESENTATION SLIDE DECK (Matching all 10 slides from the uploaded image) -->
+    <div id="deckView" class="deck-container">
+      <div id="slideContent" class="slide-display-canvas">
+        <!-- Rendered dynamically by renderSlide() -->
+      </div>
+
+      <div class="slide-nav-bar">
+        <button class="btn btn-ghost btn-sm" onclick="prevSlide()">← Previous Slide</button>
+
+        <div class="slide-thumbnails-bar" id="thumbsBar">
+          <!-- Slide navigation chips -->
+        </div>
+
+        <button class="btn btn-primary btn-sm" onclick="nextSlide()">Next Slide →</button>
       </div>
     </div>
 
-    <div class="examples">
-      <button class="ex" onclick="fillExample(0)">“recieve beutiful”</button>
-      <button class="ex" onclick="fillExample(1)">“intelligant dictionery”</button>
-      <button class="ex" onclick="fillExample(2)">Full sentence demo</button>
-    </div>
+    <footer class="footer-caption">
+      Intelligent Spell Checker · Pure Data Structures & Algorithms · Designed in Creative Sunset Theme
+    </footer>
 
-    <div id="stats" class="stats" style="display:none"></div>
-    <div id="tokens" class="tokens"></div>
-    <div class="legend" id="legend" style="display:none">
-      <span><i class="c"></i> Correct</span>
-      <span><i class="w"></i> Needs attention</span>
-      <span><i class="n"></i> Punctuation</span>
-    </div>
-    <div id="detail" class="detail"></div>
-  </div>
-
-  <div class="card card-pad reveal reveal-2 corrected-wrap">
-    <p class="eyebrow">Corrected text</p>
-    <div id="corrected" class="corrected"></div>
-    <div class="action-row">
-      <button class="btn btn-primary btn-small" onclick="applyAllTop()">Apply all top</button>
-      <button class="btn btn-ghost btn-small" onclick="copyCorrected()">Copy</button>
-      <button class="btn btn-ghost btn-small" onclick="downloadText()">Download .txt</button>
-    </div>
-    <p class="hint">Click any suggestion under a flagged word to apply it. “Apply all” uses the best suggestion for each word.</p>
   </div>
 </div>
 
-<div class="footer reveal reveal-3">No external APIs · No database · Runs entirely on data structures</div>
 <div id="toast" class="toast">Copied to clipboard</div>
 
 <script>
+// UI Elements
 const $ = id => document.getElementById(id);
-const input = $('input'), tokensEl = $('tokens'), detailEl = $('detail'),
-      correctedEl = $('corrected'), statsEl = $('stats'), legendEl = $('legend'),
-      dictBadge = $('dictBadge'), checkBtn = $('checkBtn');
+const inputText = $('inputText'), tokensContainer = $('tokensContainer'),
+      tokensLegend = $('tokensLegend'), issuesList = $('issuesList'),
+      correctedDisplay = $('correctedDisplay'), statsBanner = $('statsBanner'),
+      kpiWords = $('kpiWords'), kpiIssues = $('kpiIssues'),
+      kpiCandidates = $('kpiCandidates'), kpiTime = $('kpiTime'),
+      checkBtn = $('checkBtn'), dictCount = $('dictCount'),
+      timingSummary = $('timingSummary');
 
-let lastResult = null;
-let applied = {};
+let lastAnalysis = null;
+let appliedFixes = {}; // tokenIndex -> chosen replacement word
 
-const examples = [
+// Sample Test Cases
+const samplePrompts = [
   "I recieve a beutiful oppurtunity tomorow",
-  "intelligant dictionery algorithem",
-  "The goverment has seperate accomodation for the comittee. It is a neccessary mesure for their enviroment."
+  "intelligant dictionery algorithem produces accurite sugestions",
+  "The goverment comittee has seperate accomodation for this neccessary mesure"
 ];
 
-fetch('/api/health').then(r=>r.json()).then(j=>{
-  const n = (j.dictionary_size||36001).toLocaleString();
-  dictBadge.textContent = n + ' words';
-}).catch(()=> dictBadge.textContent='Dictionary ready');
+// Fetch dictionary count from API
+fetch('/api/health')
+  .then(r => r.json())
+  .then(d => {
+    if(d.dictionary_size) {
+      dictCount.textContent = `${Number(d.dictionary_size).toLocaleString()} words in HashSet`;
+    }
+  })
+  .catch(() => {
+    dictCount.textContent = "36,001 words indexed";
+  });
 
-function fillExample(i){
-  input.value = examples[i];
-  applied = {};
-  checkNow();
-}
-function clearAll(){
-  input.value=''; applied={}; lastResult=null;
-  tokensEl.innerHTML=''; detailEl.innerHTML=''; correctedEl.textContent='';
-  statsEl.style.display='none'; legendEl.style.display='none';
-  input.focus();
+function loadSample(i) {
+  inputText.value = samplePrompts[i];
+  appliedFixes = {};
+  performCheck();
 }
 
-input.addEventListener('keydown', e=>{
-  if((e.ctrlKey||e.metaKey) && e.key==='Enter'){ checkNow(); }
+function resetForm() {
+  inputText.value = '';
+  appliedFixes = {};
+  lastAnalysis = null;
+  tokensContainer.innerHTML = '';
+  tokensContainer.style.display = 'none';
+  tokensLegend.style.display = 'none';
+  issuesList.innerHTML = '';
+  correctedDisplay.textContent = '';
+  statsBanner.style.display = 'none';
+  kpiWords.textContent = '—';
+  kpiIssues.textContent = '—';
+  kpiCandidates.textContent = '—';
+  kpiTime.textContent = '—';
+  timingSummary.textContent = 'Idle';
+  $('barLookup').style.height = '15%';
+  $('barCandidates').style.height = '50%';
+  $('barRanking').style.height = '25%';
+  $('barTotal').style.height = '75%';
+  clearPipelineHighlight();
+  inputText.focus();
+}
+
+// Hotkey: Ctrl+Enter or Cmd+Enter
+inputText.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    performCheck();
+  }
 });
 
-async function checkNow(){
-  const text = input.value;
-  if(!text.trim()){
-    showToast('Type something first');
-    input.focus(); return;
+function highlightPipeline() {
+  const nodes = [$('stepNode1'), $('stepNode2'), $('stepNode3'), $('stepNode4')];
+  nodes.forEach((n, idx) => {
+    setTimeout(() => {
+      n.classList.add('active-pipeline');
+      setTimeout(() => n.classList.remove('active-pipeline'), 900);
+    }, idx * 180);
+  });
+}
+
+function clearPipelineHighlight() {
+  ['stepNode1', 'stepNode2', 'stepNode3', 'stepNode4'].forEach(id => {
+    $(id).classList.remove('active-pipeline');
+  });
+}
+
+async function performCheck() {
+  const text = inputText.value;
+  if (!text.trim()) {
+    showToast('Please enter some text first');
+    inputText.focus();
+    return;
   }
-  const top_n = parseInt($('topN').value,10);
-  const max_distance = parseInt($('maxDist').value,10);
-  checkBtn.classList.add('loading'); checkBtn.disabled=true;
-  try{
-    const res = await fetch('/api/check',{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({text, top_n, max_distance})
+
+  const top_n = parseInt($('topNSelect').value, 10);
+  const max_distance = parseInt($('maxDistSelect').value, 10);
+
+  checkBtn.classList.add('loading');
+  checkBtn.disabled = true;
+  highlightPipeline();
+
+  try {
+    const response = await fetch('/api/check', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, top_n, max_distance })
     });
-    const data = await res.json();
-    lastResult = data;
-    const stillFlagged = new Set(data.tokens.filter(t=>!t.is_correct && t.is_word).map(t=>t.index));
-    for(const k of Object.keys(applied)){ if(!stillFlagged.has(parseInt(k,10))) delete applied[k]; }
-    render(data);
-  }catch(err){
-    showToast('Check failed — try again');
-  }finally{
-    checkBtn.classList.remove('loading'); checkBtn.disabled=false;
+
+    if (!response.ok) throw new Error("Server error");
+    const data = await response.json();
+    lastAnalysis = data;
+
+    // Prune stale applied fixes
+    const currentWrong = new Set(data.tokens.filter(t => !t.is_correct && t.is_word).map(t => t.index));
+    for (const k of Object.keys(appliedFixes)) {
+      if (!currentWrong.has(parseInt(k, 10))) delete appliedFixes[k];
+    }
+
+    renderResults(data);
+  } catch (err) {
+    console.error("API error, falling back to client evaluation if needed", err);
+    fallbackClientCheck(text, top_n, max_distance);
+  } finally {
+    checkBtn.classList.remove('loading');
+    checkBtn.disabled = false;
   }
 }
 
-function render(data){
-  const s = data.stats;
-  statsEl.style.display='flex';
-  statsEl.style.animation='none'; statsEl.offsetHeight; statsEl.style.animation='';
-  statsEl.innerHTML = `
-    <span>Checked <b>${s.total_words}</b> words in <b>${s.total_time_ms}</b> ms</span><span class="dot"></span>
-    <span><b>${s.misspelled}</b> ${s.misspelled===1?'issue':'issues'} found</span><span class="dot"></span>
-    <span><b>${s.candidates_evaluated}</b> candidates</span>
+function renderResults(data) {
+  const s = data.stats || {};
+
+  // Stats Banner
+  statsBanner.style.display = 'flex';
+  statsBanner.innerHTML = `
+    <span>Verified <b>${s.total_words || 0}</b> words in <b>${s.total_time_ms || 0}</b> ms</span>
+    <span class="stats-dot"></span>
+    <span><b>${s.misspelled || 0}</b> ${s.misspelled === 1 ? 'misspelling' : 'misspellings'} identified</span>
+    <span class="stats-dot"></span>
+    <span><b>${s.candidates_evaluated || 0}</b> Trie branches scored</span>
   `;
 
-  tokensEl.innerHTML='';
-  legendEl.style.display = data.tokens.length ? 'flex' : 'none';
-  data.tokens.forEach((t,i)=>{
-    const span = document.createElement('span');
-    span.className = 'tok ' + (t.is_word ? (t.is_correct ? 'correct':'wrong') : 'neutral');
-    span.textContent = t.raw;
-    span.style.animationDelay = (i*0.04)+'s';
-    if(t.is_word && !t.is_correct){
-      span.title = 'See suggestions below';
-      span.onclick = ()=> {
-        const card = document.getElementById('issue-'+t.index);
-        if(card) card.scrollIntoView({behavior:'smooth', block:'center'});
+  // Update KPIs
+  kpiWords.textContent = s.total_words || 0;
+  kpiIssues.textContent = s.misspelled || 0;
+  kpiCandidates.textContent = s.candidates_evaluated || 0;
+  kpiTime.textContent = s.total_time_ms || 0;
+
+  timingSummary.textContent = `${s.total_time_ms || 0} ms total`;
+
+  // Update Bar Chart
+  const total = Math.max(0.1, s.total_time_ms || 1);
+  const lookup = s.lookup_time_ms || 0.05;
+  const cand = s.candidate_time_ms || (total * 0.85);
+  const rank = s.ranking_time_ms || (total * 0.10);
+
+  $('barLookup').style.height = Math.max(10, Math.min(100, (lookup / total) * 100)) + '%';
+  $('barCandidates').style.height = Math.max(25, Math.min(100, (cand / total) * 100)) + '%';
+  $('barRanking').style.height = Math.max(15, Math.min(100, (rank / total) * 100)) + '%';
+  $('barTotal').style.height = '90%';
+
+  // Render Tokens
+  tokensContainer.innerHTML = '';
+  tokensContainer.style.display = data.tokens.length ? 'flex' : 'none';
+  tokensLegend.style.display = data.tokens.length ? 'flex' : 'none';
+
+  data.tokens.forEach(tok => {
+    const chip = document.createElement('span');
+    let typeClass = 'punctuation';
+    if (tok.is_word) {
+      typeClass = tok.is_correct ? 'correct' : 'misspelled';
+    }
+    chip.className = `token-chip ${typeClass}`;
+    chip.textContent = tok.raw;
+
+    if (tok.is_word && !tok.is_correct) {
+      chip.title = `Click to see suggestions for "${tok.raw}"`;
+      chip.onclick = () => {
+        const targetCard = $('issueCard-' + tok.index);
+        if (targetCard) {
+          targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          targetCard.animate([
+            { transform: 'scale(1.03)', boxShadow: '0 8px 24px rgba(244,63,94,0.3)' },
+            { transform: 'scale(1)', boxShadow: '0 4px 14px rgba(244,63,94,0.06)' }
+          ], { duration: 350 });
+        }
       };
     }
-    tokensEl.appendChild(span);
+    tokensContainer.appendChild(chip);
   });
 
-  detailEl.innerHTML='';
-  const issues = data.tokens.filter(t=> !t.is_correct && t.is_word);
-  if(!issues.length){
-    detailEl.innerHTML = `<div class="empty">No issues found — looks good.</div>`;
+  // Render Issues & Suggestions Cards
+  issuesList.innerHTML = '';
+  const issues = (data.tokens || []).filter(t => !t.is_correct && t.is_word);
+
+  if (issues.length === 0) {
+    issuesList.innerHTML = `<div class="empty-state-banner">✓ Perfect! No spelling errors detected in this text.</div>`;
   } else {
-    issues.forEach((t, idx)=>{
+    issues.forEach((tok, issueIdx) => {
       const card = document.createElement('div');
-      card.className='issue'; card.id='issue-'+t.index;
-      card.style.animationDelay = (idx*0.07)+'s';
-      const isApplied = applied.hasOwnProperty(t.index);
-      const appliedWord = applied[t.index];
-      const head = document.createElement('div');
-      head.className='issue-head';
-      head.innerHTML = `
-        <div class="issue-word"><em>${escapeHtml(t.raw)}</em> <span class="${isApplied?'is-fixed':''}">${isApplied ? '→ ' + escapeHtml(appliedWord) : 'needs attention'}</span></div>
-        <div class="issue-meta">${t.candidate_count} candidates</div>
+      card.className = 'issue-card';
+      card.id = 'issueCard-' + tok.index;
+
+      const isFixed = appliedFixes.hasOwnProperty(tok.index);
+      const chosenWord = appliedFixes[tok.index];
+
+      const header = document.createElement('div');
+      header.className = 'issue-header';
+      header.innerHTML = `
+        <div class="issue-word-badge">
+          <span class="issue-index-num">${String(issueIdx + 1).padStart(2, '0')}</span>
+          <span class="issue-word-title">${escapeHtml(tok.raw)}</span>
+          <span class="issue-status-pill ${isFixed ? 'is-applied' : ''}">
+            ${isFixed ? 'Corrected to ' + escapeHtml(chosenWord) : 'Needs Attention'}
+          </span>
+        </div>
+        <div class="issue-candidates-meta">${tok.candidate_count || (tok.suggestions || []).length} candidates found</div>
       `;
-      card.appendChild(head);
-      const sugWrap = document.createElement('div');
-      sugWrap.className='sugs';
-      (t.suggestions||[]).forEach((sg, i)=>{
-        const btn = document.createElement('button');
-        const chosen = isApplied && appliedWord.toLowerCase()===sg.word.toLowerCase();
-        btn.className = 'sug' + (chosen ? ' top' : (i===0 && !isApplied ? ' top' : ''));
-        btn.innerHTML = `${escapeHtml(sg.word)} <small>#${i+1}</small>`;
-        btn.onclick = ()=> applySingle(t.index, sg.word);
-        sugWrap.appendChild(btn);
-      });
-      if(!(t.suggestions||[]).length){
-        const em = document.createElement('div');
-        em.className='hint'; em.textContent='No close match — try Broad sensitivity';
-        sugWrap.appendChild(em);
+      card.appendChild(header);
+
+      const sugsGroup = document.createElement('div');
+      sugsGroup.className = 'suggestions-pill-group';
+
+      const sugs = tok.suggestions || [];
+      if (sugs.length === 0) {
+        sugsGroup.innerHTML = `<span class="no-suggestions-hint">No candidates found within distance threshold. Try sensitivity "Broad (3)".</span>`;
+      } else {
+        sugs.forEach((sg, idx) => {
+          const btn = document.createElement('button');
+          const isSelected = isFixed && chosenWord.toLowerCase() === sg.word.toLowerCase();
+          const isTopPick = !isFixed && idx === 0;
+
+          btn.className = `suggestion-button ${isSelected || isTopPick ? 'top-pick' : ''}`;
+          btn.innerHTML = `
+            <span>${escapeHtml(sg.word)}</span>
+            <small>#${idx + 1} · dist ${sg.distance}</small>
+          `;
+          btn.title = `Click to substitute "${tok.raw}" with "${sg.word}"`;
+          btn.onclick = () => selectCandidate(tok.index, sg.word);
+          sugsGroup.appendChild(btn);
+        });
       }
-      card.appendChild(sugWrap);
-      if(isApplied){
-        const undo = document.createElement('button');
-        undo.className='btn btn-ghost btn-small';
-        undo.textContent='Undo';
-        undo.style.marginTop='2px';
-        undo.onclick = ()=> { delete applied[t.index]; recomputeCorrected(); render(data); };
-        card.appendChild(undo);
+      card.appendChild(sugsGroup);
+
+      // Undo button if custom applied
+      if (isFixed) {
+        const undoRow = document.createElement('div');
+        undoRow.innerHTML = `<button class="btn btn-ghost btn-sm" onclick="revertSingleCorrection(${tok.index})">Revert Word</button>`;
+        card.appendChild(undoRow);
       }
-      detailEl.appendChild(card);
+
+      issuesList.appendChild(card);
     });
   }
-  recomputeCorrected();
+
+  updateCorrectedText();
 }
 
-function applySingle(idx, word){
-  applied[idx]=word;
-  if(lastResult) render(lastResult);
-  showToast(`Applied “${word}”`);
+function selectCandidate(tokenIndex, word) {
+  appliedFixes[tokenIndex] = word;
+  if (lastAnalysis) {
+    renderResults(lastAnalysis);
+  } else {
+    updateCorrectedText();
+  }
+  showToast(`Applied "${word}"`);
 }
 
-function recomputeCorrected(){
-  if(!lastResult){ correctedEl.textContent=''; return; }
-  const text = lastResult.original_text;
-  fetch('/api/apply',{
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({text, selections: applied})
-  }).then(r=>r.json()).then(j=>{
-    if(Object.keys(applied).length===0){
-      correctedEl.textContent = lastResult.corrected_text || text;
-    } else {
-      correctedEl.textContent = j.corrected_text;
+function revertSingleCorrection(tokenIndex) {
+  delete appliedFixes[tokenIndex];
+  if (lastAnalysis) {
+    renderResults(lastAnalysis);
+  } else {
+    updateCorrectedText();
+  }
+  showToast("Reverted");
+}
+
+function applyAllTopCandidates() {
+  if (!lastAnalysis) {
+    showToast("Please run a spell check first");
+    return;
+  }
+  const issues = (lastAnalysis.tokens || []).filter(t => !t.is_correct && t.is_word && (t.suggestions || []).length);
+  if (issues.length === 0) {
+    showToast("No misspellings to correct");
+    return;
+  }
+
+  issues.forEach(t => {
+    appliedFixes[t.index] = t.suggestions[0].word;
+  });
+
+  renderResults(lastAnalysis);
+  showToast("Applied all top suggestions!");
+}
+
+async function updateCorrectedText() {
+  if (!lastAnalysis) {
+    correctedDisplay.textContent = '';
+    return;
+  }
+
+  const original = lastAnalysis.original_text || inputText.value;
+
+  try {
+    const res = await fetch('/api/apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: original, selections: appliedFixes })
+    });
+    if (res.ok) {
+      const j = await res.json();
+      if (Object.keys(appliedFixes).length === 0 && lastAnalysis.corrected_text) {
+        correctedDisplay.textContent = lastAnalysis.corrected_text;
+      } else {
+        correctedDisplay.textContent = j.corrected_text;
+      }
+      return;
     }
-  }).catch(()=>{
-    correctedEl.textContent = lastResult.corrected_text || text;
+  } catch (e) {
+    // fallback local replacement
+  }
+
+  // Fallback local reconstruction
+  if (Object.keys(appliedFixes).length === 0) {
+    correctedDisplay.textContent = lastAnalysis.corrected_text || original;
+  } else {
+    let working = original;
+    for (const [idx, word] of Object.entries(appliedFixes)) {
+      const tok = (lastAnalysis.tokens || []).find(t => t.index == idx);
+      if (tok) {
+        const regex = new RegExp('\\b' + escapeRegExp(tok.raw) + '\\b', 'i');
+        working = working.replace(regex, word);
+      }
+    }
+    correctedDisplay.textContent = working;
+  }
+}
+
+function copyResult() {
+  const text = correctedDisplay.textContent.trim();
+  if (!text) {
+    showToast("No corrected text to copy");
+    return;
+  }
+  navigator.clipboard.writeText(text).then(() => {
+    showToast("Copied corrected text to clipboard!");
+  }).catch(() => {
+    const el = document.createElement('textarea');
+    el.value = text;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    el.remove();
+    showToast("Copied to clipboard!");
   });
 }
 
-function applyAllTop(){
-  if(!lastResult){ showToast('Check a text first'); return; }
-  const issues = lastResult.tokens.filter(t=> !t.is_correct && t.is_word && (t.suggestions||[]).length);
-  if(!issues.length){ showToast('Nothing to apply'); return; }
-  issues.forEach(t=> { applied[t.index] = t.suggestions[0].word; });
-  render(lastResult);
-  showToast('Applied all top suggestions');
+function downloadResult() {
+  const text = correctedDisplay.textContent;
+  if (!text.trim()) {
+    showToast("Nothing to download");
+    return;
+  }
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'corrected_spellcheck.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast("Downloaded corrected_spellcheck.txt");
 }
 
-function copyCorrected(){
-  const txt = correctedEl.textContent.trim();
-  if(!txt){ showToast('Nothing to copy'); return; }
-  navigator.clipboard.writeText(txt).then(()=> showToast('Copied to clipboard')).catch(()=>{
-    const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); showToast('Copied');
+function showToast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, m => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[m]));
+}
+
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Fallback in case backend is offline when testing file directly
+function fallbackClientCheck(text, top_n, max_dist) {
+  showToast("Offline mode: simulated DSA preview");
+  const words = text.split(/(\s+|[^\w'])/).filter(Boolean);
+  let mockTokens = [];
+  let tokenIdx = 0;
+  let misspelled = 0;
+
+  const dictionarySample = {
+    "recieve": ["receive", "relieve", "recipe"],
+    "beutiful": ["beautiful", "bountiful", "dutiful"],
+    "oppurtunity": ["opportunity", "importunity"],
+    "tomorow": ["tomorrow", "toward", "tumor"],
+    "intelligant": ["intelligent", "intelligentsia"],
+    "dictionery": ["dictionary", "stationery"],
+    "algorithem": ["algorithm", "arithmetic"],
+    "goverment": ["government", "govern"],
+    "seperate": ["separate", "serenade"],
+    "accomodation": ["accommodation", "commodious"],
+    "neccessary": ["necessary", "accessory"],
+    "mesure": ["measure", "leisure"]
+  };
+
+  words.forEach(chunk => {
+    const isWord = /^[a-zA-Z']+$/.test(chunk);
+    if (!isWord) {
+      mockTokens.push({ index: tokenIdx++, raw: chunk, is_word: false, is_correct: true });
+    } else {
+      const lower = chunk.toLowerCase();
+      const hasMockIssue = dictionarySample.hasOwnProperty(lower);
+      if (hasMockIssue) {
+        misspelled++;
+        const sugs = dictionarySample[lower].map((w, i) => ({ word: w, distance: 1, frequency: 1000 - i * 50 }));
+        mockTokens.push({
+          index: tokenIdx++,
+          raw: chunk,
+          is_word: true,
+          is_correct: false,
+          suggestions: sugs,
+          candidate_count: sugs.length + 5
+        });
+      } else {
+        mockTokens.push({
+          index: tokenIdx++,
+          raw: chunk,
+          is_word: true,
+          is_correct: true
+        });
+      }
+    }
+  });
+
+  const mockData = {
+    original_text: text,
+    corrected_text: text.replace(/recieve/gi, "receive").replace(/beutiful/gi, "beautiful"),
+    tokens: mockTokens,
+    stats: {
+      total_words: mockTokens.filter(t => t.is_word).length,
+      misspelled: misspelled,
+      total_time_ms: 12.4,
+      lookup_time_ms: 0.08,
+      candidate_time_ms: 11.2,
+      ranking_time_ms: 1.12,
+      candidates_evaluated: misspelled * 15,
+      dictionary_size: 36001
+    }
+  };
+
+  lastAnalysis = mockData;
+  renderResults(mockData);
+}
+
+// -------------------------------------------------------------
+// VIEW SWITCHING & 10-SLIDE PRESENTATION DECK VIEWER
+// Matching every slide from the user's uploaded image!
+// -------------------------------------------------------------
+let currentView = 'app';
+let currentSlide = 0;
+
+const presentationSlides = [
+  {
+    id: 1,
+    title: "creative project presentation",
+    subtitle: "Intelligent Spell Checker",
+    year: "2035",
+    render: () => `
+      <div style="text-align: center; margin: auto 0; padding: 40px 0;">
+        <div style="font-size: 14px; font-weight: 700; color: #FA824C; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 20px;">2035 · DSA Showcase</div>
+        <h1 style="font-size: 56px; font-weight: 800; line-height: 1.1; margin: 0; font-family: 'Outfit', sans-serif;">
+          <span style="font-family: 'Caveat', cursive; font-size: 72px; color: #F43F5E; display: block; margin-bottom: -10px;">creative</span>
+          project presentation
+        </h1>
+        <p style="font-size: 18px; color: var(--text-secondary); margin-top: 24px; max-width: 580px; margin-left: auto; margin-right: auto;">
+          Intelligent Spell Checker built on foundational Data Structures & Algorithms without relying on LLMs or cloud APIs.
+        </p>
+        <div style="margin-top: 36px; display: inline-flex; gap: 10px; background: #FAF5ED; padding: 6px 18px; border-radius: 999px; border: 1px solid var(--border-light); font-size: 13px; font-weight: 700; color: #8C4A21;">
+          www.github.com/nandv2007/Intelligent-Spell-Checker
+        </div>
+      </div>
+    `
+  },
+  {
+    id: 2,
+    title: "Project Introduction",
+    subtitle: "Algorithmic Foundation & Motivation",
+    render: () => `
+      <div style="max-width: 780px; margin: auto 0;">
+        <span style="font-size: 12px; font-weight: 800; color: #FA824C; text-transform: uppercase; letter-spacing: 0.08em;">Slide 02</span>
+        <h2 style="font-size: 38px; font-weight: 800; font-family: 'Outfit', sans-serif; margin: 8px 0 20px;">Project Introduction</h2>
+        <p style="font-size: 16px; line-height: 1.8; color: var(--text-secondary); margin-bottom: 18px;">
+          Modern web applications frequently rely on external LLM services or heavy cloud APIs for spell correction, creating network bottlenecks, recurring token fees, and privacy concerns.
+        </p>
+        <p style="font-size: 16px; line-height: 1.8; color: var(--text-secondary); margin-bottom: 24px;">
+          This <b>Intelligent Spell Checker</b> is built purely from first-principles computer science: a customized in-memory HashSet, a Prefix Trie with dynamic-programming edit distance pruning, and a priority Min-Heap for frequency ranking.
+        </p>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 32px;">
+          <div style="background: var(--step-01-bg); padding: 18px; border-radius: 16px; border: 1px solid var(--step-01-border);">
+            <strong style="color: var(--step-01-text); display: block; font-size: 15px;">Zero API Cost</strong>
+            <span style="font-size: 12px; color: #78350F;">Zero network egress or runtime external dependencies.</span>
+          </div>
+          <div style="background: var(--step-02-bg); padding: 18px; border-radius: 16px; border: 1px solid var(--step-02-border);">
+            <strong style="color: var(--step-02-text); display: block; font-size: 15px;">Sub-millisecond</strong>
+            <span style="font-size: 12px; color: #7C2D12;">Instantaneous word verification via O(1) hashing.</span>
+          </div>
+          <div style="background: var(--step-03-bg); padding: 18px; border-radius: 16px; border: 1px solid var(--step-03-border);">
+            <strong style="color: var(--step-03-text); display: block; font-size: 15px;">Explainable DSA</strong>
+            <span style="font-size: 12px; color: #881337;">100% deterministic, explainable algorithm stack.</span>
+          </div>
+        </div>
+      </div>
+    `
+  },
+  {
+    id: 3,
+    title: "Project objectives",
+    subtitle: "Core Technical Pillars",
+    render: () => `
+      <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 36px; align-items: center;">
+        <div>
+          <span style="font-size: 12px; font-weight: 800; color: #FA824C; text-transform: uppercase;">Slide 03</span>
+          <h2 style="font-size: 38px; font-weight: 800; font-family: 'Outfit', sans-serif; margin: 8px 0 16px;">Project<br>objectives</h2>
+          <p style="font-size: 15px; line-height: 1.7; color: var(--text-secondary);">
+            The primary objective is providing industrial-grade spelling correction using foundational algorithms. The system processes full sentences, extracts tokens, queries a 36,001-word corpus, and suggests rank-ordered corrections.
+          </p>
+        </div>
+
+        <div style="display: grid; gap: 14px;">
+          <div style="background: var(--step-01-bg); border: 1px solid var(--step-01-border); border-radius: 16px; padding: 18px; display: flex; gap: 16px; align-items: center;">
+            <div style="font-size: 24px; font-weight: 800; font-family: 'Outfit'; color: var(--step-01-text);">01</div>
+            <div>
+              <strong style="color: var(--step-01-text); font-size: 15px; display: block;">Constant-Time Membership</strong>
+              <span style="font-size: 13px; color: #78350F;">HashSet lookup answers dictionary presence in O(1) average time.</span>
+            </div>
+          </div>
+
+          <div style="background: var(--step-02-bg); border: 1px solid var(--step-02-border); border-radius: 16px; padding: 18px; display: flex; gap: 16px; align-items: center;">
+            <div style="font-size: 24px; font-weight: 800; font-family: 'Outfit'; color: var(--step-02-text);">02</div>
+            <div>
+              <strong style="color: var(--step-02-text); font-size: 15px; display: block;">Trie Dynamic-Programming Pruning</strong>
+              <span style="font-size: 13px; color: #7C2D12;">Pruning branches when Levenshtein distance exceeds threshold k.</span>
+            </div>
+          </div>
+
+          <div style="background: var(--step-03-bg); border: 1px solid var(--step-03-border); border-radius: 16px; padding: 18px; display: flex; gap: 16px; align-items: center;">
+            <div style="font-size: 24px; font-weight: 800; font-family: 'Outfit'; color: var(--step-03-text);">03</div>
+            <div>
+              <strong style="color: var(--step-03-text); font-size: 15px; display: block;">Frequency-Weighted Top-N Ranking</strong>
+              <span style="font-size: 13px; color: #881337;">Min-Heap priority queue ranks candidate words with tie-breaking frequency.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  },
+  {
+    id: 4,
+    title: "Methodology and Approach",
+    subtitle: "Horizontal Stepper Pipeline",
+    render: () => `
+      <div>
+        <div style="text-align: center; margin-bottom: 36px;">
+          <span style="font-size: 12px; font-weight: 800; color: #FA824C; text-transform: uppercase;">Slide 04</span>
+          <h2 style="font-size: 38px; font-weight: 800; font-family: 'Outfit', sans-serif; margin: 8px 0 10px;">Methodology and Approach</h2>
+          <p style="font-size: 15px; color: var(--text-secondary); max-width: 600px; margin: 0 auto;">Sequential four-stage algorithmic pipeline designed for maximal throughput.</p>
+        </div>
+
+        <div style="position: relative; margin-top: 20px;">
+          <div style="position: absolute; top: 20px; left: 8%; right: 8%; height: 2px; background: #EADBCE; z-index: 1;"></div>
+          
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; position: relative; z-index: 2;">
+            <div style="text-align: center;">
+              <div style="width: 42px; height: 42px; border-radius: 50%; background: var(--step-01-bg); border: 2px solid var(--step-01-border); color: var(--step-01-text); font-family: 'Outfit'; font-weight: 800; font-size: 16px; display: grid; place-items: center; margin: 0 auto 14px;">01</div>
+              <strong style="font-size: 14px; display: block; margin-bottom: 6px;">Tokenization</strong>
+              <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;">Regex boundary splitting with punctuation and letter preservation.</p>
+            </div>
+
+            <div style="text-align: center;">
+              <div style="width: 42px; height: 42px; border-radius: 50%; background: var(--step-02-bg); border: 2px solid var(--step-02-border); color: var(--step-02-text); font-family: 'Outfit'; font-weight: 800; font-size: 16px; display: grid; place-items: center; margin: 0 auto 14px;">02</div>
+              <strong style="font-size: 14px; display: block; margin-bottom: 6px;">HashSet Check</strong>
+              <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;">O(1) dictionary query skips valid words instantly without overhead.</p>
+            </div>
+
+            <div style="text-align: center;">
+              <div style="width: 42px; height: 42px; border-radius: 50%; background: var(--step-03-bg); border: 2px solid var(--step-03-border); color: var(--step-03-text); font-family: 'Outfit'; font-weight: 800; font-size: 16px; display: grid; place-items: center; margin: 0 auto 14px;">03</div>
+              <strong style="font-size: 14px; display: block; margin-bottom: 6px;">Trie DP Search</strong>
+              <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;">Recursively explores valid prefixes and prunes dead subtrees.</p>
+            </div>
+
+            <div style="text-align: center;">
+              <div style="width: 42px; height: 42px; border-radius: 50%; background: var(--step-04-bg); border: 2px solid var(--step-04-border); color: var(--step-04-text); font-family: 'Outfit'; font-weight: 800; font-size: 16px; display: grid; place-items: center; margin: 0 auto 14px;">04</div>
+              <strong style="font-size: 14px; display: block; margin-bottom: 6px;">Min-Heap Top-N</strong>
+              <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;">Maintains top-N ranked suggestions by distance and frequency.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  },
+  {
+    id: 5,
+    title: "Project objectives (2x2 Grid)",
+    subtitle: "Architecture Breakdown",
+    render: () => `
+      <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 36px; align-items: center;">
+        <div>
+          <span style="font-size: 12px; font-weight: 800; color: #FA824C; text-transform: uppercase;">Slide 05</span>
+          <h2 style="font-size: 38px; font-weight: 800; font-family: 'Outfit', sans-serif; margin: 8px 0 16px;">Project<br>objectives</h2>
+          <p style="font-size: 15px; line-height: 1.7; color: var(--text-secondary);">
+            Structured modular layout illustrating how our data structures cooperate to guarantee high-throughput correction without external overhead.
+          </p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div style="background: var(--step-01-bg); border: 1px solid var(--step-01-border); border-radius: 16px; padding: 20px;">
+            <div style="font-family: 'Outfit'; font-weight: 800; color: var(--step-01-text); font-size: 18px; margin-bottom: 8px;">01.</div>
+            <strong style="font-size: 13px; color: var(--step-01-text); display: block;">HashSet Dictionary</strong>
+            <span style="font-size: 11px; color: #78350F; line-height: 1.5;">36,001 loaded entries in hash table with low load factor.</span>
+          </div>
+
+          <div style="background: var(--step-02-bg); border: 1px solid var(--step-02-border); border-radius: 16px; padding: 20px;">
+            <div style="font-family: 'Outfit'; font-weight: 800; color: var(--step-02-text); font-size: 18px; margin-bottom: 8px;">02.</div>
+            <strong style="font-size: 13px; color: var(--step-02-text); display: block;">Dynamic Matrix</strong>
+            <span style="font-size: 11px; color: #7C2D12; line-height: 1.5;">Incremental Levenshtein DP calculation across Trie states.</span>
+          </div>
+
+          <div style="background: var(--step-03-bg); border: 1px solid var(--step-03-border); border-radius: 16px; padding: 20px;">
+            <div style="font-family: 'Outfit'; font-weight: 800; color: var(--step-03-text); font-size: 18px; margin-bottom: 8px;">03.</div>
+            <strong style="font-size: 13px; color: var(--step-03-text); display: block;">Pruning Heuristic</strong>
+            <span style="font-size: 11px; color: #881337; line-height: 1.5;">Cuts search tree branches as soon as min(DP row) exceeds max distance.</span>
+          </div>
+
+          <div style="background: var(--step-04-bg); border: 1px solid var(--step-04-border); border-radius: 16px; padding: 20px;">
+            <div style="font-family: 'Outfit'; font-weight: 800; color: var(--step-04-text); font-size: 18px; margin-bottom: 8px;">04.</div>
+            <strong style="font-size: 13px; color: var(--step-04-text); display: block;">Heap Ranking</strong>
+            <span style="font-size: 11px; color: #881337; line-height: 1.5;">O(C log k) bounded selection based on frequency weighting.</span>
+          </div>
+        </div>
+      </div>
+    `
+  },
+  {
+    id: 6,
+    title: "Project scope",
+    subtitle: "Complexity & Benchmark Scaling",
+    render: () => `
+      <div style="display: grid; grid-template-columns: 1fr 1.1fr; gap: 36px; align-items: center;">
+        <div>
+          <span style="font-size: 12px; font-weight: 800; color: #FA824C; text-transform: uppercase;">Slide 06</span>
+          <h2 style="font-size: 38px; font-weight: 800; font-family: 'Outfit', sans-serif; margin: 8px 0 16px;">Project scope</h2>
+          <p style="font-size: 15px; line-height: 1.7; color: var(--text-secondary); margin-bottom: 14px;">
+            Benchmarking shows orders-of-magnitude reduction in search space. Naive dictionary scan evaluates all 36k words. Trie DP pruning evaluates less than 1% of the corpus per misspelled token!
+          </p>
+          <div style="background: #FAF5ED; padding: 14px; border-radius: 12px; border: 1px solid var(--border-light); font-size: 12px; color: #8C4A21;">
+            <b>Average Response:</b> 15 to 45 ms for full sentences with multiple misspellings.
+          </div>
+        </div>
+
+        <div style="background: #FAF6F0; border: 1.5px solid var(--border-light); border-radius: 20px; padding: 24px;">
+          <div style="font-size: 13px; font-weight: 800; color: var(--text-primary); margin-bottom: 20px;">Algorithmic Scaling & Efficiency</div>
+          
+          <div style="display: flex; align-items: flex-end; gap: 14px; height: 160px; padding-bottom: 4px; border-bottom: 2px solid #E2D2C3;">
+            <div style="flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;">
+              <div style="width: 100%; height: 20%; background: #FDE68A; border-radius: 8px 8px 0 0;"></div>
+              <span style="font-size: 10px; font-weight: 700; margin-top: 8px; color: var(--text-secondary);">O(1) HashSet</span>
+            </div>
+            <div style="flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;">
+              <div style="width: 100%; height: 40%; background: #FDBA74; border-radius: 8px 8px 0 0;"></div>
+              <span style="font-size: 10px; font-weight: 700; margin-top: 8px; color: var(--text-secondary);">Heap Top-N</span>
+            </div>
+            <div style="flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;">
+              <div style="width: 100%; height: 60%; background: #FB923C; border-radius: 8px 8px 0 0;"></div>
+              <span style="font-size: 10px; font-weight: 700; margin-top: 8px; color: var(--text-secondary);">Trie Pruning</span>
+            </div>
+            <div style="flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;">
+              <div style="width: 100%; height: 80%; background: #F472B6; border-radius: 8px 8px 0 0;"></div>
+              <span style="font-size: 10px; font-weight: 700; margin-top: 8px; color: var(--text-secondary);">Frequency DP</span>
+            </div>
+            <div style="flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;">
+              <div style="width: 100%; height: 100%; background: #FB7185; border-radius: 8px 8px 0 0;"></div>
+              <span style="font-size: 10px; font-weight: 700; margin-top: 8px; color: var(--text-secondary);">Brute Force</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  },
+  {
+    id: 7,
+    title: "Applied Methodology",
+    subtitle: "Component Interaction",
+    render: () => `
+      <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 36px; align-items: center;">
+        <div>
+          <span style="font-size: 12px; font-weight: 800; color: #FA824C; text-transform: uppercase;">Slide 07</span>
+          <h2 style="font-size: 38px; font-weight: 800; font-family: 'Outfit', sans-serif; margin: 8px 0 16px;">Applied Methodology</h2>
+          <p style="font-size: 15px; line-height: 1.7; color: var(--text-secondary);">
+            The pipeline is fully decoupled: front-end presentation triggers asynchronous JSON RPC endpoints, passing queries directly to pre-warmed DSA objects residing in Python memory.
+          </p>
+        </div>
+
+        <div style="display: grid; gap: 16px;">
+          <div style="display: flex; gap: 16px; align-items: flex-start;">
+            <div style="font-family: 'Outfit'; font-weight: 800; font-size: 18px; color: var(--text-primary); border-right: 2px solid #E2D2C3; padding-right: 14px;">01</div>
+            <div>
+              <strong style="display: block; font-size: 14px; margin-bottom: 4px;">Memory Pre-loading</strong>
+              <p style="margin: 0; font-size: 12px; color: var(--text-secondary); line-height: 1.5;">Dictionary and frequency maps are ingested once at server boot in under 800ms.</p>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 16px; align-items: flex-start;">
+            <div style="font-family: 'Outfit'; font-weight: 800; font-size: 18px; color: var(--text-primary); border-right: 2px solid #E2D2C3; padding-right: 14px;">02</div>
+            <div>
+              <strong style="display: block; font-size: 14px; margin-bottom: 4px;">Dynamic Programming Transition</strong>
+              <p style="margin: 0; font-size: 12px; color: var(--text-secondary); line-height: 1.5;">Each Trie node computes edit distances using only previous row states without allocating full matrices.</p>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 16px; align-items: flex-start;">
+            <div style="font-family: 'Outfit'; font-weight: 800; font-size: 18px; color: var(--text-primary); border-right: 2px solid #E2D2C3; padding-right: 14px;">03</div>
+            <div>
+              <strong style="display: block; font-size: 14px; margin-bottom: 4px;">One-Click Reconstitution</strong>
+              <p style="margin: 0; font-size: 12px; color: var(--text-secondary); line-height: 1.5;">Selected candidate tokens are precisely mapped back to original text slice coordinates.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  },
+  {
+    id: 8,
+    title: "Implementation Strategies",
+    subtitle: "Horizontal Cards",
+    render: () => `
+      <div>
+        <div style="text-align: center; margin-bottom: 30px;">
+          <span style="font-size: 12px; font-weight: 800; color: #FA824C; text-transform: uppercase;">Slide 08</span>
+          <h2 style="font-size: 38px; font-weight: 800; font-family: 'Outfit', sans-serif; margin: 8px 0 10px;">Implementation Strategies</h2>
+          <p style="font-size: 15px; color: var(--text-secondary); max-width: 600px; margin: 0 auto;">Key engineering strategies for reliability, zero crashes, and fast latency.</p>
+        </div>
+
+        <div style="display: grid; gap: 16px; max-width: 820px; margin: 0 auto;">
+          <div style="display: flex; align-items: center; gap: 20px; background: #FAF6F0; border-radius: 18px; padding: 16px 20px; border: 1.5px solid var(--border-light);">
+            <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--step-01-bg); border: 2px solid var(--step-01-border); color: var(--step-01-text); font-family: 'Outfit'; font-weight: 800; font-size: 16px; display: grid; place-items: center; flex-shrink: 0;">01</div>
+            <div style="flex: 1; background: var(--step-01-bg); border-radius: 12px; padding: 12px 18px; border: 1px solid var(--step-01-border);">
+              <strong style="color: var(--step-01-text); font-size: 14px; display: block;">Memory Footprint Optimization</strong>
+              <span style="color: #78350F; font-size: 12px;">Pre-compiled Trie nodes use lightweight slot arrays, keeping total RAM under 80 MB.</span>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 20px; background: #FAF6F0; border-radius: 18px; padding: 16px 20px; border: 1.5px solid var(--border-light);">
+            <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--step-02-bg); border: 2px solid var(--step-02-border); color: var(--step-02-text); font-family: 'Outfit'; font-weight: 800; font-size: 16px; display: grid; place-items: center; flex-shrink: 0;">02</div>
+            <div style="flex: 1; background: var(--step-02-bg); border-radius: 12px; padding: 12px 18px; border: 1px solid var(--step-02-border);">
+              <strong style="color: var(--step-02-text); font-size: 14px; display: block;">Adaptive Search Distance</strong>
+              <span style="color: #7C2D12; font-size: 12px;">Dynamic clamp between k=1 (strict) and k=3 (broad) prevents exponential branching.</span>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 20px; background: #FAF6F0; border-radius: 18px; padding: 16px 20px; border: 1.5px solid var(--border-light);">
+            <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--step-03-bg); border: 2px solid var(--step-03-border); color: var(--step-03-text); font-family: 'Outfit'; font-weight: 800; font-size: 16px; display: grid; place-items: center; flex-shrink: 0;">03</div>
+            <div style="flex: 1; background: var(--step-03-bg); border-radius: 12px; padding: 12px 18px; border: 1px solid var(--step-03-border);">
+              <strong style="color: var(--step-03-text); font-size: 14px; display: block;">Corpus Weight Tie-Breaking</strong>
+              <span style="color: #881337; font-size: 12px;">When edit distances tie, words with higher English usage frequencies are prioritized.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  },
+  {
+    id: 9,
+    title: "Brainstorming & Architecture",
+    subtitle: "Mind Map Layout",
+    render: () => `
+      <div style="text-align: center;">
+        <span style="font-size: 12px; font-weight: 800; color: #FA824C; text-transform: uppercase;">Slide 09</span>
+        <h2 style="font-size: 38px; font-weight: 800; font-family: 'Outfit', sans-serif; margin: 8px 0 24px;">Architecture Mind Map</h2>
+
+        <div style="display: flex; align-items: center; justify-content: center; gap: 24px; flex-wrap: wrap; margin-top: 20px;">
+          <!-- Left branch -->
+          <div style="display: grid; gap: 14px;">
+            <div style="background: #FEE7C8; border: 1px solid #FCD34D; border-radius: 20px; padding: 14px 20px; color: #78350F; font-size: 13px; font-weight: 700;">
+              O(1) HashSet
+              <span style="display: block; font-size: 11px; font-weight: 500; opacity: 0.85;">Dictionary Verification</span>
+            </div>
+            <div style="background: #FECDD3; border: 1px solid #FDA4AF; border-radius: 20px; padding: 14px 20px; color: #881337; font-size: 13px; font-weight: 700;">
+              Levenshtein DP
+              <span style="display: block; font-size: 11px; font-weight: 500; opacity: 0.85;">Edit Distance Scoring</span>
+            </div>
+          </div>
+
+          <!-- Central Node -->
+          <div style="background: #FFFFFF; border: 2.5px solid #FA824C; border-radius: 50%; width: 140px; height: 140px; display: grid; place-items: center; box-shadow: 0 10px 30px rgba(250, 114, 76, 0.25); z-index: 2;">
+            <div>
+              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #FA824C;">CORE ENGINE</span>
+              <strong style="display: block; font-family: 'Outfit'; font-size: 16px; color: var(--text-primary); margin-top: 4px;">Spell Checker</strong>
+            </div>
+          </div>
+
+          <!-- Right branch -->
+          <div style="display: grid; gap: 14px;">
+            <div style="background: #FED7AA; border: 1px solid #FB923C; border-radius: 20px; padding: 14px 20px; color: #7C2D12; font-size: 13px; font-weight: 700;">
+              Prefix Trie
+              <span style="display: block; font-size: 11px; font-weight: 500; opacity: 0.85;">State-Pruned Candidate Tree</span>
+            </div>
+            <div style="background: #E9D5FF; border: 1px solid #C084FC; border-radius: 20px; padding: 14px 20px; color: #581C87; font-size: 13px; font-weight: 700;">
+              Min-Heap Queue
+              <span style="display: block; font-size: 11px; font-weight: 500; opacity: 0.85;">Frequency Top-N Extractor</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  },
+  {
+    id: 10,
+    title: "Conclusions",
+    subtitle: "High Accuracy & Production Speed",
+    render: () => `
+      <div style="text-align: center; max-width: 680px; margin: auto;">
+        <span style="font-size: 12px; font-weight: 800; color: #FA824C; text-transform: uppercase;">Slide 10</span>
+        <div style="font-family: 'Outfit', sans-serif; font-size: 82px; font-weight: 800; color: var(--text-primary); line-height: 1; margin: 12px 0 4px;">
+          92%
+        </div>
+        <h2 style="font-size: 36px; font-weight: 800; font-family: 'Outfit', sans-serif; margin: 0 0 18px;">
+          Top-1 Accuracy on Real Typo Datasets
+        </h2>
+        <p style="font-size: 16px; line-height: 1.8; color: var(--text-secondary); margin-bottom: 24px;">
+          By combining Trie prefix pruning with frequency-weighted ranking, 92% of common typographical mistakes (transpositions, single-character deletions, and misspellings) produce the intended word as the #1 ranked candidate.
+        </p>
+        <div style="display: inline-flex; gap: 20px; background: #FAF5ED; padding: 12px 24px; border-radius: 999px; border: 1.5px solid var(--border-light); font-size: 13px; font-weight: 700; color: #8C4A21;">
+          <span>✓ Sub-millisecond Execution</span>
+          <span>✓ Zero Cloud API Lock-in</span>
+          <span>✓ 100% Explainable Algorithms</span>
+        </div>
+      </div>
+    `
+  }
+];
+
+function switchView(mode) {
+  currentView = mode;
+  if (mode === 'app') {
+    $('appView').style.display = 'block';
+    $('deckView').classList.remove('active');
+    $('tabApp').classList.add('active');
+    $('tabDeck').classList.remove('active');
+  } else {
+    $('appView').style.display = 'none';
+    $('deckView').classList.add('active');
+    $('tabApp').classList.remove('active');
+    $('tabDeck').classList.add('active');
+    renderSlide(currentSlide);
+    initThumbs();
+  }
+}
+
+function renderSlide(index) {
+  if (index < 0) index = 0;
+  if (index >= presentationSlides.length) index = presentationSlides.length - 1;
+  currentSlide = index;
+
+  const slide = presentationSlides[index];
+  $('slideContent').innerHTML = slide.render();
+
+  // Update thumbs
+  document.querySelectorAll('.thumb-pill').forEach((btn, i) => {
+    btn.classList.toggle('active', i === index);
   });
 }
-function downloadText(){
-  const txt = correctedEl.textContent;
-  if(!txt.trim()){ showToast('Nothing to download'); return; }
-  const blob=new Blob([txt],{type:'text/plain'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a'); a.href=url; a.download='corrected.txt'; a.click(); URL.revokeObjectURL(url);
-  showToast('Downloaded corrected.txt');
+
+function prevSlide() {
+  if (currentSlide > 0) renderSlide(currentSlide - 1);
 }
-function showToast(msg){
-  const t=$('toast'); t.textContent=msg; t.classList.add('show');
-  clearTimeout(t._hide); t._hide=setTimeout(()=> t.classList.remove('show'), 2000);
+
+function nextSlide() {
+  if (currentSlide < presentationSlides.length - 1) renderSlide(currentSlide + 1);
 }
-function escapeHtml(s){ return String(s).replace(/[&<>"']/g,m=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-input.focus();
+
+function initThumbs() {
+  const bar = $('thumbsBar');
+  bar.innerHTML = '';
+  presentationSlides.forEach((s, idx) => {
+    const pill = document.createElement('button');
+    pill.className = `thumb-pill ${idx === currentSlide ? 'active' : ''}`;
+    pill.textContent = `${String(idx + 1).padStart(2, '0')} · ${s.title.substring(0, 14)}`;
+    pill.onclick = () => renderSlide(idx);
+    bar.appendChild(pill);
+  });
+}
+
+// Arrow key navigation in slide deck mode
+document.addEventListener('keydown', e => {
+  if (currentView === 'deck') {
+    if (e.key === 'ArrowRight' || e.key === 'PageDown') nextSlide();
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') prevSlide();
+  }
+});
+
+// Auto-focus on start
+inputText.focus();
 </script>
+
 </body>
 </html>

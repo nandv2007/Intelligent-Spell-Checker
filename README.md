@@ -1,42 +1,95 @@
 # Intelligent Spell Checker
 
-> Precise. Quiet. Built only with data structures — no database, no external APIs.
+> Precise. Quiet. Pure Data Structures & Algorithms — zero external APIs, zero database. Designed in a Creative Sunset Presentation Theme with Dual Interactive & Slide Deck views.
 
 **Demo Link:** `https://spellchecker-2-oal4.onrender.com/` 
 
 **Repository:** `https://github.com/nandv2007/Intelligent-Spell-Checker.git`
 
-### Screenshot
+### Screenshots
 #### Image:1
 <img width="1342" height="760" alt="image" src="https://github.com/user-attachments/assets/2ade055d-9b10-4cf0-a84e-a2fd9fccbee9" />
 
 #### Image:2
-
 <img width="797" height="708" alt="image" src="https://github.com/user-attachments/assets/133498c2-c4a3-4af5-af9e-8c00da19e76c" />
 <img width="797" height="295" alt="image" src="https://github.com/user-attachments/assets/f7f2310e-4d92-4b15-bdca-baee167d9595" />
 
+---
+
+### What it does
+- **Creative Sunset Presentation Theme:** Warm aura glow framing, floating ivory presentation cards, and sunset-stepper accents inspired by modern creative slide decks.
+- **Dual View Modes:**
+  - **✨ Interactive Checker:** Full spelling verification workstation with live token stream, candidate pills, one-click correction, and real-time execution bar charts.
+  - **📑 Slide Deck View:** An interactive 10-slide deck matching project viva & review presentations (Objectives, Methodology, Project Scope, Implementation Strategies, Mind Map, and Conclusions).
+- **Accurate Detection & Normalization:** Preserves capitalization and punctuation boundaries.
+- **Constant-Time Verification:** Queries a **HashSet** in $O(1)$ average time.
+- **State-Pruned Candidate Generation:** Uses a **Prefix Trie + Dynamic Programming (DP)** pruning to search through a 36,001-word corpus in milliseconds without brute-force scans.
+- **Damerau-Levenshtein Edit Distance:** $O(m \times n)$ scoring including transpositions.
+- **Priority Ranking:** Uses a bounded **Min-Heap** to return top-N candidates scored by edit distance and weighted by corpus frequency.
+- **One-Click Corrections:** Click any suggestion chip or "Apply all top suggestions" to replace misspellings instantly.
+
+---
+
+### Data Structures in Code
+
+| DSA | File | Purpose | Time Complexity |
+|-----|------|---------|-----------------|
+| **HashSet** | `dsa/hash_set.py` | Dictionary membership verification | $O(1)$ average |
+| **Trie** | `dsa/trie.py` | Prefix-pruned candidate search tree | $O(L)$ with DP pruning |
+| **DP / Levenshtein** | `dsa/levenshtein.py` | Edit distance scoring | $O(m \cdot n)$ |
+| **Min-Heap** | `dsa/min_heap.py` | Top-N candidate ranking | $O(n \log k)$ |
+| **HashMap** | `dsa/hash_map.py` | Word frequency lookup | $O(1)$ average |
 
 ---
 
 ### How it works
 
 **Workflow:**
-Input → Normalize → Tokenize → Lookup (HashSet) → Detect → Candidates (Trie + DP) → Rank (Min-Heap) → Output
+`Input` → `Normalize & Tokenize` → `Lookup (HashSet)` → `Detect` → `Candidates (Trie + DP)` → `Rank (Min-Heap)` → `Corrected Output`
 
-**Step-by-step:**
+1. **Normalize & Tokenize** — Input is lowercased and split with regex. Handles `Hello, World!` → `hello` + `world`, ignores numbers/punctuation, handles empty input without crashing.
+2. **Lookup (HashSet)** — Every token is checked in a hash set in **$O(1)$ average**. If found → marked correct.
+3. **Candidate generation (Trie + DP pruning)** — Instead of comparing misspelled tokens to all 36,000 words (brute-force), the checker walks the Trie. For each node, it tracks a DP row for the target; if $\min(\text{row}) > \text{maxDist}$, the entire subtree is pruned.
+4. **Scoring (Levenshtein + Damerau)** — Classic DP: `dp[i][j] = min(delete, insert, replace)`. Damerau accounts for adjacent character transpositions (e.g. `recieve` → `receive` is distance 1).
+5. **Ranking (Min-Heap)** — Candidates are ranked by `(distance, -frequency)` using a min-heap, prioritizing higher English usage frequency when distances tie.
+6. **Output & Export** — Live token visualizer, one-click suggestion application, and clipboard/download export.
 
-1.  **Normalize & Tokenize** — Input is lowercased and split with regex. Handles `Hello, World!` → `hello` + `world`, ignores numbers/punctuation, handles empty input without crashing.
+---
 
-2.  **Lookup (HashSet)** — Every token is checked in a hash set in **O(1) average**. If found → marked correct. Example: `hello` → correct, `recieve` → miss.
+### Project Layout
+```
+app.py                  # Flask application & JSON endpoints
+dsa/
+  hash_set.py           # O(1) hash set for dictionary membership
+  hash_map.py           # O(1) frequency lookup
+  trie.py               # Prefix Trie with DP branch pruning
+  levenshtein.py        # Levenshtein & Damerau distance
+  min_heap.py           # Priority queue for top-N ranking
+  spell_checker.py      # Core orchestrator pipeline
+data/
+  dictionary.txt        # 36,001 curated English words
+  frequencies.json      # Word frequencies for ranking
+templates/
+  index.html            # Single-page app in Creative Sunset Theme
+requirements.txt        # Flask & gunicorn
+render.yaml             # Render deployment config
+Procfile                # Process file for cloud hosting
+```
 
-3.  **Candidate generation (Trie + DP pruning)** — Instead of comparing `recieve` to all 36,000 words (brute-force), we walk the Trie. For each node we keep a DP row for the target. If `min(row) > maxDist (2)`, the entire subtree is pruned. For `recieve`, the `z...` branch is never visited.
+---
 
-4.  **Scoring (Levenshtein + Damerau)** — Classic DP: `dp[i][j] = min(delete, insert, replace)` → **O(m×n)**. Damerau adds one check: if `s[i-1]==t[j-2]` and `s[i-2]==t[j-1]` → `dp[i][j] = min(dp[i][j], dp[i-2][j-2]+1)`. This makes `teh→the` and `recieve→receive` = 1 edit, not 2.
+### Run Locally
+```bash
+pip install -r requirements.txt
+python app.py
+# Open http://localhost:5000 in your browser
+```
 
-5.  **Ranking (Min-Heap)** — Candidates become `(word, distance, frequency)`. Rank key is `(distance, -frequency)`. A min-heap via `heapq.nsmallest` keeps only the best 5 → **O(n log k)** instead of sorting all 200+ candidates. Tie → more common word wins (e.g., `receive` (freq 9096) beats `relieve` (4011) when both distance 1).
+---
 
-6.  **Output** — Original spacing and capitalization are preserved. Click any chip to apply one word, or `Apply all top` to replace all. Stats are real: `Checked 6 words in 52 ms · 4 issues · 19 candidates` (lookup / candidate / ranking times).
-
-**Example:** `recieve` → Trie finds 13 candidates within 2 edits → Damerau refines `receive` to 1 → Heap ranks `receive (1, 9096)` before `relieve (1, 4011)` → shown first.
-
-**Layers:** Presentation (Flask/UI) → Application (`spell_checker.py`) → Algorithm (DP/ranking) → Data Structures (HashSet/Trie/Heap/Map) → Dataset (`dictionary.txt`)
+### Deployment on Render (Free)
+1. Push to GitHub (`origin main`).
+2. Go to [Render Dashboard](https://dashboard.render.com) → **New +** → **Web Service**.
+3. Connect your repository — Render auto-detects `render.yaml`.
+4. Build command: `pip install -r requirements.txt`
+5. Start command: `gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120`
